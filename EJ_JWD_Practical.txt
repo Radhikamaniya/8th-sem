@@ -1,0 +1,2093 @@
+=====================================================================================================================================
+===================================2 TABLE CRUD WITH JSF============================================
+
+prepare database ,coonection bridge,insert driver,persistant unit,entity,ejbs,managed Bean (right click+new+other+jsf CDI Bean,inside that scope application )(addinser code+callenterprise bean+select your ejvlocal+okay)
+change persistant unit name start the server
+
+=============================================================================================
+persistent.xml
+-----------------------------------------------------------------
+<persistence-unit name="Jsf_MultipalTable_crudPU" transaction-type="JTA">
+    <jta-data-source>jdbc/mscit</jta-data-source>
+   
+    <properties/>
+--------------------------------------------------------------------------
+--------------------------------------EJB----------------------------------------
+customerLocal.java
+
+----------------------
+
+// ====  Customer =========
+    Collection<Customer> getAllCustomers();
+     //==== Address =================
+     
+     void addAddresOfCustomer(String street, String city, String state, String zip, Integer custId);
+     void updateAddresOfCustomer(Integer addressId,String street, String city, String state, String zip, Integer custId);
+     void removeAddressOfCustomer(Integer addressId, Integer custId);
+     Collection<Address> getAddresesOfCustomer(Integer custId);
+     Collection<Address> getAddressesByCity(String city);
+     Collection<Address> getAddressesByState(String state);
+     Collection<Address> getAddressesByZip(String zip);
+     Collection<Address> getAddresses(String city, String State);
+--------------------------------------------------------------------------------
+customer.java
+---------------------------
+@Stateless
+public class customer implements customerLocal {
+ @PersistenceContext(unitName = "Jsf_MultipalTable_crudPU")
+    EntityManager em;
+    @Override
+    public Collection<Customer> getAllCustomers() {
+       return em.createNamedQuery("Customer.findAll").getResultList();
+    }
+
+    @Override
+    public void addAddresOfCustomer(String street, String city, String state, String zip, Integer custId) {
+Customer c = em.find(Customer.class, custId);
+    Collection<Address> addresses = c.getAddressCollection();
+    
+    Address address = new Address();
+    address.setStreet(street);
+    address.setCity(city);
+    address.setState(state);
+    address.setZip(zip);
+    address.setCustomerId(c); // Very Important
+    
+    addresses.add(address);
+    c.setAddressCollection(addresses);
+    
+    em.persist(address);
+    em.merge(c);
+        }
+
+    @Override
+    public void updateAddresOfCustomer(Integer addressId, String street, String city, String state, String zip, Integer custId) {
+         Address a=em.find(Address.class,addressId);
+         Customer c = em.find(Customer.class, custId);
+    
+//         a.setAddressId(addressId);
+         a.setState(state);
+          a.setCity(city);
+          a.setStreet(street);
+          a.setZip(zip);
+         a.setCustomerId(c);
+         
+       em.merge(a);
+    }
+
+    @Override
+    public void removeAddressOfCustomer(Integer addressId, Integer custId) {
+Customer c = em.find(Customer.class, custId);
+    Address address = em.find(Address.class, addressId);
+    
+    Collection<Address> addresses = c.getAddressCollection();
+    
+    if(addresses.contains(address))
+    {
+        addresses.remove(address);
+        c.setAddressCollection(addresses);
+        em.remove(address);
+        em.merge(c);
+    }
+        }
+
+    @Override
+    public Collection<Address> getAddresesOfCustomer(Integer custId) {
+Customer c = em.find(Customer.class, custId);
+    
+   return c.getAddressCollection();
+    }
+
+    @Override
+    public Collection<Address> getAddressesByCity(String city) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddressesByState(String state) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddressesByZip(String zip) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddresses(String city, String State) {
+           return em.createNamedQuery("Address.findAll").getResultList();
+
+    }
+
+    // Add business logic below. (Right-click in editor and choose
+    // "Insert Code > Add Business Method")
+}
+
+==============================================MANAGEDBEAN========================================
+
+@Named(value = "managedBean")
+@ApplicationScoped
+public class ManagedBean {
+
+    @EJB
+    private customerLocal customer;
+    
+    Customer c = new Customer();
+    Address a = new Address();
+    
+    
+            
+    Collection<Customer> castomer;
+    private int addressId;
+    private int customerId;
+    private String street;
+    private String city;
+    private String state;
+    private String zip;
+
+    public Customer getC() {
+        return c;
+    }
+
+    public void setC(Customer c) {
+        this.c = c;
+    }
+
+    public Address getA() {
+        return a;
+    }
+
+    public void setA(Address a) {
+        this.a = a;
+    }
+
+    public Collection<Customer> getCastomer() {
+        return castomer;
+    }
+
+    public void setCastomer(Collection<Customer> castomer) {
+        this.castomer = castomer;
+    }
+
+    public int getAddressId() {
+        return addressId;
+    }
+
+    public void setAddressId(int addressId) {
+        this.addressId = addressId;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getZip() {
+        return zip;
+    }
+
+    public void setZip(String zip) {
+        this.zip = zip;
+    }
+
+   
+    /**
+     * Creates a new instance of ManagedBean
+     */
+    public ManagedBean() {
+       
+    }
+      @PostConstruct
+    public void init(){
+        castomer = customer.getAllCustomers();
+    }
+    public Collection<Address> ShowAddresses(){
+           return customer.getAddresses(city, state);  
+    }
+    
+    public String addAddress(){
+        customer.addAddresOfCustomer(street, city, state, zip, customerId);
+        return "index";
+    }
+    
+    public void deleteAddress(){
+       customer.removeAddressOfCustomer(addressId, customerId);
+    }
+    
+    public String edit(Address A)
+    {
+        this.addressId=A.getAddressId();
+        this.state=A.getState();
+        this.city=A.getCity();
+        this.street=A.getStreet();
+        this.zip=A.getZip();
+        Customer c = A.getCustomerId();
+        this.customerId =c.getCustomerID();
+        this.a = new Address();
+        return "editAddress";
+        
+    }
+    
+    public String edit()
+    {
+        this.customer.updateAddresOfCustomer(addressId, street, city, state, zip, customerId);
+        return "index";
+    }
+    
+    public void delete(Address add)
+    {
+        this.addressId = add.getAddressId();
+        Customer c = add.getCustomerId();
+        this.customerId = c.getCustomerID();
+        this.customer.removeAddressOfCustomer(addressId, customerId);
+    }
+}
+============================================XHTMLS==========================================
+index.xhtml
+------------------------------------------------------------------------
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        Hello from Facelets<f:view>
+
+ <h:link value="Add Mobile" outcome="insertAddress"></h:link>
+            <h:form>
+                <h1><h:outputText value="List"/></h1>
+                <h:dataTable value="#{managedBean.ShowAddresses()}" var="item">
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="AddressId"/>
+                        </f:facet>
+                        <h:outputText value="#{item.addressId}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Street"/>
+                        </f:facet>
+                        <h:outputText value="#{item.street}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="City"/>
+                        </f:facet>
+                        <h:outputText value="#{item.city}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="State"/>
+                        </f:facet>
+                        <h:outputText value="#{item.state}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Zip"/>
+                        </f:facet>
+                        <h:outputText value="#{item.zip}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="CustomerId"/>
+                        </f:facet>
+                        <h:outputText value="#{item.customerId.firstName}"/>
+                    </h:column>
+                    <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{managedBean.delete(item)}" value="Delete"></h:commandLink>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{managedBean.edit(item)}" value="Edit"></h:commandLink>
+                </h:column>
+                </h:dataTable>
+            </h:form>
+        </f:view>
+
+    </h:body>
+</html>
+------------------------------------------------------------------------------------------
+insertAddress.xhtml
+-----------------------------
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+          <h:head>
+        <title>Facelet Title</title>
+           </h:head>
+    <h:body>
+
+<h:form>
+            state:<h:inputText value="#{managedBean.state}"></h:inputText><br/>
+            city:<h:inputText value="#{managedBean.city}"></h:inputText><br/>
+            street:<h:inputText value="#{managedBean.street}"></h:inputText><br/>
+            zip:<h:inputText value="#{managedBean.zip}"></h:inputText><br/>
+           
+            <h:selectOneMenu value="#{managedBean.customerId}">
+                <f:selectItems value="#{managedBean.castomer}" var="c" itemValue="#{c.customerID}" itemLabel="#{c.firstName}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{managedBean.addAddress()}"></h:commandButton>
+        </h:form>
+    
+    </h:body>
+</html>
+
+-------------------------------------------------------------------------------------
+editAddress.xhtml
+------------------------------------
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        Hello from Facelets
+        <h:form>
+            state:<h:inputText value="#{managedBean.state}"></h:inputText><br/>
+            city:<h:inputText value="#{managedBean.city}"></h:inputText><br/>
+            street:<h:inputText value="#{managedBean.street}"></h:inputText><br/>
+            zip:<h:inputText value="#{managedBean.zip}"></h:inputText><br/>
+           
+            <h:selectOneMenu value="#{managedBean.customerId}">
+                <f:selectItems value="#{managedBean.castomer}" var="c" itemValue="#{c.customerID}" itemLabel="#{c.firstName}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{managedBean.edit()}"></h:commandButton>
+        </h:form>
+        
+
+    </h:body>
+</html>
+
+
+
+
+==============================================================================================================================
+============================================1 table JSF CRUD===============================
+-----------------------------------------------------------------
+UserLocal.java
+------------------------------------
+@Local
+public interface userLocal {
+     public void AddUser(Integer UserName,String FirstName,String LastName);
+     void updateUser(Integer UserId,Integer UserName, String FirstName, String LastName);
+    void removeUser(Integer UserId);
+    public Collection<User> getUser();
+}
+-------------------------------------------------------
+user.java(ejb)
+--------------------------------
+@Stateless
+public class user implements userLocal {
+@PersistenceContext(unitName = "JSF_RegistrationPU")
+    EntityManager em;
+
+    @Override
+    public void AddUser(Integer UserName, String FirstName, String LastName) {
+        User d = new User();
+        d.setFirstName(FirstName);
+        d.setLastName(LastName);
+        d.setUserName(UserName);
+        em.persist(d);
+        System.out.println("Data Inserted !!");
+       }
+
+    @Override
+    public Collection<User> getUser() {
+       return em.createNamedQuery("User.findAll").getResultList();
+    }
+
+    @Override
+    public void removeUser(Integer UserId) {
+       User c = (User) em.find(User.class, UserId);
+       em.remove(c);  
+    }
+
+    @Override
+    public void updateUser(Integer UserId, Integer UserName, String FirstName, String LastName) {
+        User u= em.find(User.class,UserId);
+       u.setFirstName(FirstName);
+      u.setLastName(LastName);
+      u.setUserName(UserName);
+   
+      
+      em.merge(u);     }
+  
+}
+-----------------------------------------------------------
+Managed Bean.java
+---------------------------------------------
+@Named(value = "index1")
+@ApplicationScoped
+public class UserKruti {
+
+    @EJB
+    private userLocal user1;
+        
+        User user=new User();
+        
+private Integer userID;
+        private String firstName;
+        private String lastName;
+        private int userName;
+
+    public Integer getUserID() {
+        return userID;
+    }
+
+    public void setUserID(Integer userID) {
+        this.userID = userID;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public int getUserName() {
+        return userName;
+    }
+
+    public void setUserName(int userName) {
+        this.userName = userName;
+    }
+    /**
+     * Creates a new instance of UserKruti
+     */
+    public UserKruti() {
+        
+    }
+    
+    public List<User> findAll(){
+      //  return (List<Departmenttb>) dataBean.getAllDepartments();
+      return (List<User>) this.user1.getUser();
+    }
+    public String insertUser()
+    {
+        user1.AddUser(userName,firstName,lastName);
+        return "Display";
+        //Move to the "Display" Page!!
+    }
+    public void removeUser(User u){
+       this.userID = u.getUserID();
+       user1.removeUser(userID);
+    }
+
+    public String edit(User u)
+    {
+        this.user=u;
+        this.userID=u.getUserID();
+       this.userName=u.getUserName();
+        this.firstName=u.getFirstName();
+        this.lastName=u.getLastName();
+        return "Update";    
+    }
+    
+    public String edit()
+    {
+        user1.updateUser(userID, userName, firstName, lastName);
+        return "Display";
+        
+    }
+}
+-----------------------------------------------------XHTML---------------------------------------------------
+index.xhtml
+------------------------------
+<h:form>
+    User Name:<h:inputText value="#{index1.userName}" maxlength="5"></h:inputText><br/>
+    First Name:<h:inputText value="#{index1.firstName}"></h:inputText><br/>
+    Last Name:<h:inputText value="#{index1.lastName}"></h:inputText><br/>
+    
+    
+             Email Address:
+          <h:inputText label="Email Address"
+                       id="email" value="mailid" required="true"
+                       requiredMessage="Please enter your email address."
+		validatorMessage="Invalid email format">
+          <f:validateRegex
+		pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+          </h:inputText>
+          <h:message for="email" style="color: red"/>
+
+
+<!--            <h:selectOneMenu value="#{mobile.cid}">
+                <f:selectItems value="#{mobile.categorylist}" var="c" itemValue="#{c.cid}" itemLabel="#{c.cname}">
+                </f:selectItems>
+            </h:selectOneMenu>-->
+    <h:commandButton value="save" action="#{index1.insertUser()}"></h:commandButton>
+        </h:form>
+-----------------------------------------
+Display.xhtml
+---------------------
+   <h:form>
+            <h:link value="Add Mobile" outcome="index"></h:link>
+            <h:dataTable var="m" value="#{index1.findAll()}" border="1">
+                <h:link value="Add Mobile" outcome="index"></h:link>
+                <h:column>
+                    <f:facet name="header">UserName</f:facet>
+                    <h:outputText value="#{m.userName}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">First Name</f:facet>
+                    <h:outputText value="#{m.firstName}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Last Name</f:facet>
+                    <h:outputText value="#{m.lastName}"></h:outputText>
+                </h:column>
+                 <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{index1.edit(m)}" value="Edit"></h:commandLink>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{index1.removeUser(m)}" value="Delete"></h:commandLink>
+                </h:column>
+                
+            </h:dataTable>
+        </h:form>
+-----------------------------------------
+Update.xhtml
+-----------------------
+  <h:form>
+        
+           User name:<h:inputText value="#{index1.userName}"></h:inputText><br/>
+           First name:<h:inputText value="#{index1.firstName}"></h:inputText><br/>
+           Last name:<h:inputText value="#{index1.lastName}"></h:inputText><br/>
+        
+<!--        <h:selectOneMenu value="#{mobile.cid}">
+            <f:selectItems value="#{mobile.categorylist}" var="c" itemValue="#{c.cid}" itemLabel="#{c.cname}">
+                </f:selectItems>
+            </h:selectOneMenu><br/>-->
+           <h:commandButton value="save" action="#{index1.edit()}"></h:commandButton>
+        </h:form>
+===============================================================================================
+
+QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+
+
+=====================================PUBLISHING APP========================================
+ejb(local.java)
+--------------------------------------
+@Local
+public interface PublishBeanLocal {
+    
+    // ====  Customer =========
+    Collection<Customer> getAllCustomers();
+    void addCustomer(String firstName, String lastName);
+    void updateCustomer(Integer custId, String firstName, String lastName);
+    void removeCustomer(Integer custId);
+    Collection<Customer> getCustomerByFirstName(String fname);
+     Collection<Customer> getCustomerByLastName(String lname);
+     Customer getCustomerById(Integer custId);
+     
+     //==== Address =================
+     
+     void addAddresOfCustomer(String street, String city, String state, String zip, Integer custId);
+     void updateAddresOfCustomer(Integer addressId,String street, String city, String state, String zip, Integer custId);
+     void removeAddressOfCustomer(Integer addressId, Integer custId);
+     Collection<Address> getAddresesOfCustomer(Integer custId);
+     Collection<Address> getAddressesByCity(String city);
+     Collection<Address> getAddressesByState(String state);
+     Collection<Address> getAddressesByZip(String zip);
+     Collection<Address> getAddresses(String city, String State);
+     
+     //=============  Subscription ======
+     
+     void addSubscription(String title, String type);
+     void updateSubscription(Integer subId, String title, String type);
+     void removeSubscription(Integer subId);
+     Collection<Subscription> getSubscriptionsOfCustomer(Integer custId);
+     Collection<Subscription> getSubscriptionsByType(String type);
+     Collection<Customer> getCustomersOfSubscription(Integer subId);
+     void addSubscriptionsToCustomer(Integer custId, Collection<Integer> subIds);
+      void removeSubscriptionsOfCustomer(Integer custId, Collection<Integer> subIds);
+--------------------------------------------------------------------------
+ejb(publishbean.java)
+----------------------------------------
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package ejb;
+
+import entity.Address;
+import entity.Customer;
+import entity.Subscription;
+import java.util.Collection;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+@Stateless
+public class PublishBean implements PublishBeanLocal {
+    
+    @PersistenceContext(unitName = "PublishingAppPU")
+    EntityManager em;
+
+    @Override
+    public Collection<Customer> getAllCustomers() {
+       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+   
+       return em.createNamedQuery("Customer.findAll").getResultList();
+    
+    }
+
+    @Override
+    public void addCustomer(String firstName, String lastName) {
+    //    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Customer c = new Customer(firstName, lastName);
+        em.persist(c);
+    
+    }
+
+    @Override
+    public void updateCustomer(Integer custId, String firstName, String lastName) {
+       Customer u= em.find(Customer.class,custId);
+       u.setCustomerID(custId);
+       u.setFirstName(firstName);
+      u.setLastName(lastName);
+     
+      
+      em.merge(u);
+    }
+
+    @Override
+    public void removeCustomer(Integer custId) {
+      //  throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+       Customer c = (Customer) em.find(Customer.class, custId);
+       em.remove(c);
+    }
+
+    @Override
+    public Collection<Customer> getCustomerByFirstName(String fname) {
+     //   throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+     Collection<Customer> customers = em.createNamedQuery("Customer.findByFirstName")
+             .setParameter("firstName", fname)
+             .getResultList();
+     
+     return customers;
+    
+    }
+
+    @Override
+    public Collection<Customer> getCustomerByLastName(String lname) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Customer getCustomerById(Integer custId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        return em.find(Customer.class, custId);
+    }
+
+    @Override
+    public void addAddresOfCustomer(String street, String city, String state, String zip, Integer custId) {
+     //   throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+    Customer c = em.find(Customer.class, custId);
+    Collection<Address> addresses = c.getAddressCollection();
+    
+    Address address = new Address();
+    address.setStreet(street);
+    address.setCity(city);
+    address.setState(state);
+    address.setZip(zip);
+    address.setCustomer(c); // Very Important
+    
+    addresses.add(address);
+    c.setAddressCollection(addresses);
+    
+    em.persist(address);
+    em.merge(c);
+    }
+
+    @Override
+    public void updateAddresOfCustomer(Integer addressId, String street, String city, String state, String zip, Integer custId) {
+ Address a=em.find(Address.class,addressId);
+         Customer c = em.find(Customer.class, custId);
+    
+        a.setAddressId(addressId);
+         a.setState(state);
+          a.setCity(city);
+          a.setStreet(street);
+          a.setZip(zip);
+         a.setCustomer(c);
+         
+       em.merge(a);
+    }
+
+    @Override
+    public void removeAddressOfCustomer(Integer addressId, Integer custId) {
+     //   throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Customer c = em.find(Customer.class, custId);
+    Address address = em.find(Address.class, addressId);
+    
+    Collection<Address> addresses = c.getAddressCollection();
+    
+    if(addresses.contains(address))
+    {
+        addresses.remove(address);
+        c.setAddressCollection(addresses);
+        em.remove(address);
+        em.merge(c);
+    }
+    }
+
+    @Override
+    public Collection<Address> getAddresesOfCustomer(Integer custId) {
+       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+   Customer c = em.find(Customer.class, custId);
+    
+   return c.getAddressCollection();
+    }
+
+    @Override
+    public Collection<Address> getAddressesByCity(String city) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddressesByState(String state) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddressesByZip(String zip) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddresses(String city, String State) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void addSubscription(String title, String type) {
+       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+       Subscription s = new Subscription();
+       s.setTitle(title);
+       s.setType(type);
+       em.persist(s);
+    
+    }
+
+    @Override
+    public void updateSubscription(Integer subId, String title, String type) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void removeSubscription(Integer subId) {
+     //   throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Subscription s = em.find(Subscription.class, subId);
+    em.remove(s);
+    }
+
+    @Override
+    public Collection<Subscription> getSubscriptionsOfCustomer(Integer custId) {
+    //    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+     Customer c = em.find(Customer.class, custId);
+    return c.getSubscriptionCollection();
+    }
+
+    @Override
+    public Collection<Subscription> getSubscriptionsByType(String type) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Customer> getCustomersOfSubscription(Integer subId) {
+       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+   Subscription s = em.find(Subscription.class, subId);
+    return s.getCustomerCollection();
+    }
+
+    @Override
+    public void addSubscriptionsToCustomer(Integer custId, Collection<Integer> subIds) {
+      //  throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Customer c = (Customer) em.find(Customer.class, custId);
+    Collection<Subscription> subscriptions = c.getSubscriptionCollection();
+    
+    for(Integer sid : subIds)
+    {
+        Subscription sub = (Subscription) em.find(Subscription.class, sid);
+        
+        if(!subscriptions.contains(sub))
+        {
+            Collection<Customer> customers = sub.getCustomerCollection();
+            customers.add(c);
+            subscriptions.add(sub);
+            c.setSubscriptionCollection(subscriptions);
+            sub.setCustomerCollection(customers);
+            
+            em.merge(c);
+        }
+        
+    }
+    
+    
+    }
+
+    @Override
+    public void removeSubscriptionsOfCustomer(Integer custId, Collection<Integer> subIds) {
+      //  throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+     Customer c = (Customer) em.find(Customer.class, custId);
+    Collection<Subscription> subscriptions = c.getSubscriptionCollection();
+    
+    for(Integer sid : subIds)
+    {
+        Subscription sub = (Subscription) em.find(Subscription.class, sid);
+        
+        if(subscriptions.contains(sub))
+        {
+            Collection<Customer> customers = sub.getCustomerCollection();
+            customers.remove(c);
+            subscriptions.remove(sub);
+            c.setSubscriptionCollection(subscriptions);
+            sub.setCustomerCollection(customers);
+            
+            em.merge(c);
+        }
+        
+    }
+
+    // Add business logic below. (Right-click in editor and choose
+    // "Insert Code > Add Business Method")
+    }
+
+
+}
+--------------------------------------------------------------------
+PublishServlet.java
+-----------------------------------------
+
+package servlets;
+
+import ejb.PublishBeanLocal;
+import entity.Address;
+import entity.Customer;
+import entity.Subscription;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import javax.ejb.EJB;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "PublishServlet", urlPatterns = {"/PublishServlet"})
+public class PublishServlet extends HttpServlet {
+
+    @EJB PublishBeanLocal pbl;
+   
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        try (PrintWriter out = response.getWriter()) {
+            /* TODO output your page here. You may use following sample code. */
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Servlet PublishServlet</title>");            
+            out.println("</head>");
+            out.println("<body><h2>");
+            
+            pbl.addCustomer("Vikram", "Sampat");
+                        pbl.addCustomer("Vikram1", "Sampat1");
+
+           pbl.removeCustomer(19);
+pbl.updateCustomer(20, "firstName"," lastName");
+           pbl.addAddresOfCustomer("A-213", "Surat","Gujarat", "395001", 1);
+//           pbl.addAddresOfCustomer("S-1", "Vadodara","Gujarat", "381006", 28);
+//         pbl.removeAddressOfCustomer(21, 28);
+        pbl.removeAddressOfCustomer(22, 28);
+        pbl.removeCustomer(28);
+          Collection sids = new ArrayList<Integer>();
+          sids.add(1);
+          sids.add(3);
+          sids.add(4);
+          
+        //  pbl.addSubscriptionsToCustomer(28, sids);
+         // pbl.removeSubscriptionsOfCustomer(28, sids);
+          
+          
+          Collection<Customer> customers = pbl.getAllCustomers();
+            
+            for(Customer c : customers)
+            {
+             out.println("<br/>custId : "+ c.getCustomerID() + " Name : " + c.getFirstName()+" "+ c.getLastName());
+             
+//             Collection<Address> addresses = pbl.getAddresesOfCustomer(c.getCustomerID());
+//             
+//             for(Address a : addresses)
+//             {
+//                  out.println("<br/>AddressId : "+ a.getAddressId() + " Street : "+ a.getStreet()+ " City : " + a.getCity()+"  State : "+ a.getState());
+//             
+//             }
+//             
+//             Collection<Subscription> subscriptions = pbl.getSubscriptionsOfCustomer(c.getCustomerID());
+//          
+//             for(Subscription s : subscriptions)
+//             {
+//                 out.println("<br/>Subs Id : "+ s.getSubscriptionId() + " Title : "+ s.getTitle()+ " Type : "+ s.getType());
+//             }
+             
+             out.println("<hr/>");
+                
+                
+            }
+            out.println("</h2>");
+            out.println("<h1>Servlet PublishServlet at " + request.getContextPath() + "</h1>");
+            out.println("</body>");
+            out.println("</html>");
+        }
+    }
+}
+
+
+
+
+----------------------------------------------------2TABLE,3 table UPDATE,Remove-----------------------------------
+ejb(Bean.java)
+
+
+//    =======================================Places=======================================
+    @Override
+    public Collection<Places> getAllPlaces() {
+         return em.createNamedQuery("Places.findAll").getResultList();
+    }
+
+    @Override
+    public void addPlaces(Integer CategoryID, String PlaceName, Integer StateID, String Description) {
+        Category c = em.find(Category.class, CategoryID);
+        State s=em.find(State.class,StateID);
+       if(c != null && s != null)
+      {
+          Collection<Places> p = c.getPlacesCollection();
+          Collection<Places> p1 = s.getPlacesCollection();
+           Places places = new Places();
+            places.setCategoryID(c);
+             places.setPlaceName(PlaceName);
+             places.setStateID(s);
+             places.setDescription(Description);
+             em.persist(places);
+             em.merge(c);
+             em.merge(s);
+     }
+     
+    
+    }
+
+    @Override
+    public void updatePlaces(Integer PlaceID, Integer CategoryID, String PlaceName, Integer StateID, String Description) {
+          //Packages p= em.find(Packages.class,PackageID);
+         Places p = em.find(Places.class, PlaceID);
+         Category c = em.find(Category.class, CategoryID);
+         State s =em.find(State.class, StateID);
+         p.setCategoryID(c);
+         p.setPlaceName(PlaceName);
+         p.setStateID(s);
+         p.setDescription(Description);
+       em.merge(p);
+    }
+
+    @Override
+    public void removePlaces(Integer PlaceID) {
+        Places p = em.find(Places.class, PlaceID);
+        em.remove(p);
+    }
+
+    @Override
+    public Collection<Places> SerchPlaces(String pname) {
+        Collection<Places> places = em.createNamedQuery("Places.findByPlaceName")
+             .setParameter("placeName", pname)
+             .getResultList();
+     
+     return places;
+    }
+-------------------------------------
+servlet
+----------------------
+@EJB AdminBeanLocal pbl;
+
+       //Collection<Places> place = pbl.getAllPlaces();
+              //Collection<Places> place = pbl.SerchPlaces("Dwarika");
+              //for(Places p : place )
+              //{
+               //   out.println("<br/>Placename : "+p.getPlaceName()+ " Description : " + p.getDescription());
+              //}
+              //pbl.addPlaces(1,"Dwarika",1,"Lord Krishna");
+              // pbl.addPlaces(1,"Somnath",1,"Lord Krishna");
+              //pbl.addPlaces(1,"sdas",1,"sadasds");
+               //pbl.updatePlaces(1,1,"DWARIKA",1,"MY Krishna");
+               //pbl.removePlaces(3);
+               
+====================================================REST=======================================
+--------------------------------------------------------------------------------------------------
+restPublishResource.java(restful web service from pattern)
+--------------------------------------
+
+package rest;
+
+import ejb.PublishBeanLocal;
+import entity.Address;
+import entity.Customer;
+import entity.Subscription;
+import java.util.Collection;
+import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+@Path("publish")
+public class RestPublishResource {
+    
+    @EJB PublishBeanLocal pbl;
+
+    @Context
+    private UriInfo context;
+
+    public RestPublishResource() {
+    }
+
+   @GET
+   @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Customer> getAllCustomers() {
+       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+   
+       return pbl.getAllCustomers();
+    
+    }
+
+    @Path("addcustomer/{fname}/{lname}")
+    @POST
+    public void addCustomer(@PathParam("fname") String firstName, @PathParam("lname") String lastName) {
+    pbl.addCustomer(firstName, lastName);
+    }
+ 
+    @Path("remcust/{id}")
+    @DELETE
+    public void removeCustomer(@PathParam("id") Integer custId) {
+      pbl.removeCustomer(custId);
+    }
+
+    @Path("getcustbyfname/{fname}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Customer> getCustomerByFirstName(@PathParam("fname") String fname) {
+     
+     return pbl.getCustomerByFirstName(fname);
+    
+    }
+
+    @Path("getcustbyid/{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Customer getCustomerById(@PathParam("id") Integer custId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        return pbl.getCustomerById(custId);
+    }
+
+    @Path("addaddress/{street}/{city}/{state}/{zip}/{id}")
+    @POST   
+    public void addAddresOfCustomer(@PathParam("street") String street, @PathParam("city") String city, @PathParam("state") String state, @PathParam("zip") String zip, @PathParam("id") Integer custId) {
+     
+    pbl.addAddresOfCustomer(street, city, state, zip, custId);
+    }
+    @Path("remaddress/{aid}/{cid}")
+    @DELETE
+    public void removeAddressOfCustomer(@PathParam("aid") Integer addressId,@PathParam("cid") Integer custId) {
+    
+    pbl.removeAddressOfCustomer(addressId, custId);
+    }
+
+    @Path("getaddressofcust/{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)  
+    public Collection<Address> getAddresesOfCustomer(@PathParam("id") Integer custId) {
+    
+   return pbl.getAddresesOfCustomer(custId);
+    }
+
+    @Path("addsubs/{title}/{type}")
+    @POST
+    public void addSubscription(@PathParam("title") String title, @PathParam("type") String type) {
+      pbl.addSubscription(title, type);
+    }
+
+   @Path("remsubs/{id}")
+    @DELETE    
+    public void removeSubscription(@PathParam("id") Integer subId) {
+    pbl.removeSubscription(subId);
+    }
+
+    @Path("getsubsofcust/{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Subscription> getSubscriptionsOfCustomer(@PathParam("id") Integer custId) {
+    
+    return pbl.getSubscriptionsOfCustomer(custId);
+    }
+  
+    @Path("getcustsofsub/{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Customer> getCustomersOfSubscription(@PathParam("id") Integer subId) {
+       
+    return pbl.getCustomersOfSubscription(subId);
+    }
+
+    @Path("addsubsofcust/{id}")
+    @POST    
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void addSubscriptionsToCustomer(@PathParam("id") Integer custId, Collection<Integer> subIds) {
+      
+        pbl.addSubscriptionsToCustomer(custId, subIds);
+    }
+    @Path("remsubsofcust/{id}")
+    @POST    
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void removeSubscriptionsOfCustomer(@PathParam("id") Integer custId, Collection<Integer> subIds) {
+      pbl.removeSubscriptionsOfCustomer(custId, subIds);
+    }
+}
+----------------------------------------------
+restClient.jav(by clicking new + restful java client)
+---------------------------------------------
+
+
+------------------------------
+SERVLET
+----------------------------------
+
+package servlets;
+
+import RestRadhikaCLient.restRadhikaClient;
+import client.RestPublishClient;
+import entity.Address;
+import entity.Customer;
+import entity.Subscription;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+
+@WebServlet(name = "RestPublishServlet", urlPatterns = {"/RestPublishServlet"})
+public class RestPublishServlet extends HttpServlet {
+    
+    Response res;
+    //Response res1;
+    RestPublishClient  pbl;
+    //restRadhikaClient pbl1;
+    Collection<Customer> customers;
+    GenericType<Collection<Customer>> gcustomers;
+    Collection<Address> addresses;
+    GenericType<Collection<Address>> gaddresses;
+    Collection<Subscription> subscriptions;
+    GenericType<Collection<Subscription>> gsubscriptions;
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        try (PrintWriter out = response.getWriter()) {
+            /* TODO output your page here. You may use following sample code. */
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Servlet RestPublishServlet</title>");            
+            out.println("</head>");
+            out.println("<body>");
+            out.println("<h1>Servlet RestPublishServlet at " + request.getContextPath() + "</h1>");
+            out.println("<body><h3>");
+            
+            pbl =  new RestPublishClient();
+             //pbl1 =  new restRadhikaClient();
+             
+            gcustomers= new GenericType<Collection<Customer>>(){};
+             gaddresses= new GenericType<Collection<Address>>(){};
+            gsubscriptions= new GenericType<Collection<Subscription>>(){};
+           
+            
+           // pbl.addCustomer("Vikram", "Sampat");
+           
+        //   pbl.addAddresOfCustomer("A-213", "Surat","Gujarat", "395001", "29");
+        //    pbl.addAddresOfCustomer("S-1", "Vadodara","Gujarat", "381006", "29");
+        // pbl.removeAddressOfCustomer("23", "29");
+        // pbl.removeAddressOfCustomer("24", "29");
+        //pbl1.removeCustomer("2");
+          Collection sids = new ArrayList<Integer>();
+          sids.add(1);
+          sids.add(3);
+          sids.add(4);
+          
+         // pbl.addSubscriptionsToCustomer(sids,"29");
+          //pbl.removeSubscriptionsOfCustomer(sids, "29");
+          
+          
+         res = pbl.getAllCustomers(Response.class);
+        // res1 = pbl1.getAllCustomers(Response.class);
+//         Collection<Customer> customers1 = res1.readEntity(gcustomers);
+//            
+//            for(Customer c : customers1)
+//            {
+//             out.println("custId of radhika : "+ c.getCustomerID() + " Name : " + c.getFirstName()+" "+ c.getLastName());
+//             
+          Collection<Customer> customers = res.readEntity(gcustomers);
+            
+            for(Customer c : customers)
+            {
+             out.println("custId : "+ c.getCustomerID() + " Name : " + c.getFirstName()+" "+ c.getLastName());
+             
+             
+             res = pbl.getAddresesOfCustomer(Response.class,c.getCustomerID().toString());
+             Collection<Address> addresses = res.readEntity(gaddresses);
+             
+             for(Address a : addresses)
+             {
+                  out.println("<br/>AddressId : "+ a.getAddressId() + " Street : "+ a.getStreet()+ " City : " + a.getCity()+"  State : "+ a.getState());
+             
+             }
+             res = pbl.getSubscriptionsOfCustomer(Response.class, c.getCustomerID().toString());
+             Collection<Subscription> subscriptions = res.readEntity(gsubscriptions);
+          
+             for(Subscription s : subscriptions)
+             {
+                 out.println("<br/>Subs Id : "+ s.getSubscriptionId() + " Title : "+ s.getTitle()+ " Type : "+ s.getType());
+             }
+             out.println("<hr/>");
+            }
+            out.println("</h3>");
+            out.println("</html>");
+        }
+    }
+}
+============================================================================================
+
+
+QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+
+
+=========================================MOBILE CRUD WITH JSF===============================
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package ejb;
+
+import entity.Categorytb;
+import entity.Mobiletb;
+import java.util.Collection;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+/**
+ *
+ * @author De
+ */
+@Stateless
+public class DataBean implements DataBeanLocal {
+
+    @PersistenceContext(unitName="TestApp-ejbPU")
+    EntityManager em;
+    
+    @Override
+    public Collection<Categorytb> getAllCategories() {
+//        throw new5 UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return em.createNamedQuery("Categorytb.findAll").getResultList();
+    }
+
+    @Override
+    public void addCategory(String cname) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Categorytb c = new Categorytb();
+        c.setCname(cname);
+        em.persist(c);
+    }
+
+    @Override
+    public void updateCategory(Integer cid, String cname) {
+    //    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Categorytb c = em.find(Categorytb.class,cid);
+        c.setCname(cname);
+        em.merge(c);
+    }
+
+    @Override
+    public void removeCategory(Integer cid) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Categorytb c = em.find(Categorytb.class,cid);
+        em.remove(c);
+    }
+
+    @Override
+    public Collection<Mobiletb> getAllMobiles() {
+        return em.createNamedQuery("Mobiletb.findAll").getResultList();
+    }
+
+    @Override
+    public void addMobile(String name, String camera, String myear, String Size, String memory, Integer cid, String company) {
+        
+        Categorytb c  = em.find(Categorytb.class,cid);
+        Mobiletb mobile = new Mobiletb();
+        mobile.setName(name);
+        mobile.setCamera(camera);
+        mobile.setCompany(company);
+        mobile.setMemory(memory);
+        mobile.setSize(Size);
+        mobile.setYear(myear);
+        mobile.setCid(c);
+        
+        em.persist(mobile);
+        
+        Collection<Mobiletb> categories = c.getMobiletbCollection();
+        
+        categories.add(mobile);
+        c.setMobiletbCollection(categories);
+        em.merge(c);
+    }
+
+    @Override
+    public void updateMobile(Integer modelno, String name, String camera, String year, String Size, String memory, Integer cid, String company) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+        Categorytb c = em.find(Categorytb.class,cid);
+        Mobiletb m = em.find(Mobiletb.class,modelno);
+        
+        m.setCamera(camera);
+        m.setCompany(company);
+        m.setMemory(memory);
+        m.setName(name);
+        m.setSize(Size);
+        m.setYear(year);
+        m.setCid(c);
+        
+        em.merge(m);
+        
+    }
+
+    @Override
+    public void removeMobile(Integer modelno, Integer cid) {
+        
+        Categorytb c = em.find(Categorytb.class, cid);
+        Mobiletb m = em.find(Mobiletb.class, modelno);
+        
+        Collection<Mobiletb> category = c.getMobiletbCollection();
+        
+        if(category.contains(m)){
+            category.remove(m);
+            c.setMobiletbCollection(category);
+            em.remove(m);
+            em.merge(c);
+        }
+    }
+
+    // Add business logic below. (Right-click in editor and choose
+    // "Insert Code > Add Business Method")
+}
+
+
+CDIBEAN
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Controller;
+
+import static com.sun.faces.facelets.util.Path.context;
+import ejb.DataBeanLocal;
+import entity.Categorytb;
+import entity.Mobiletb;
+import java.util.Collection;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.inject.Named;
+import javax.enterprise.context.ApplicationScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.component.UIInput;
+import javax.faces.validator.ValidatorException;
+
+/**
+ *
+ * @author De
+ */
+@Named(value = "mobile")
+@ApplicationScoped
+public class Mobile {
+
+    @EJB
+    private DataBeanLocal dataBean;
+
+
+    Mobiletb mobile = new Mobiletb();
+    Categorytb category = new Categorytb();
+    
+    private int modelno,cid;
+    private String name,camera,year,size,memory,company;
+            
+    Collection<Categorytb> categorylist;
+    
+    public int getModelno() {
+        return modelno;
+    }
+
+    public void setModelno(int modelno) {
+        this.modelno = modelno;
+    }
+
+    public int getCid() {
+        return cid;
+    }
+
+    public void setCid(int cid) {
+        this.cid = cid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCamera() {
+        return camera;
+    }
+
+    public void setCamera(String camera) {
+        this.camera = camera;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getMemory() {
+        return memory;
+    }
+
+    public void setMemory(String memory) {
+        this.memory = memory;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public Collection<Categorytb> getCategorylist() {
+        return categorylist;
+    }
+
+    public void setCategorylist(Collection<Categorytb> categorylist) {
+        this.categorylist = categorylist;
+    }
+            
+    public Mobile() {
+    }
+    
+    @PostConstruct
+    public void init(){
+        categorylist = dataBean.getAllCategories();
+    }
+             
+    public Collection<Mobiletb> showAll(){
+        return dataBean.getAllMobiles();
+    }
+    
+    public String add(){
+        dataBean.addMobile(name, camera, year, size, memory, cid, company);
+        return "displaymobile";
+    }
+    
+    public void delete(){
+        dataBean.removeMobile(modelno,cid);
+    }
+    
+    public String edit(Mobiletb m)
+    {
+        this.modelno = m.getModelno();
+        this.camera = m.getCamera();
+        this.company = m.getCompany();
+        this.memory = m.getMemory();
+        this.size = m.getSize();
+        this.year = m.getYear();
+        this.name = m.getName();
+        Categorytb c = m.getCid();
+        this.cid = c.getCid();
+        this.mobile = new Mobiletb();
+        return "editmobile";
+    }
+    
+    public String edit()
+    {
+        this.dataBean.updateMobile(modelno, name, camera, year, size, memory, cid, company);
+        return "displaymobile";
+    }
+    
+    public void delete(Mobiletb m)
+    {
+        this.modelno = m.getModelno();
+        Categorytb c = m.getCid();
+        this.cid = c.getCid();
+        this.dataBean.removeMobile(modelno, cid);
+    }
+}
+
+Display
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <h:form>
+            <h:link value="Add Mobile" outcome="insertmobile"></h:link>
+            <h:dataTable var="m" value="#{mobile.showAll()}" border="1">
+                <h:link value="Add Mobile" outcome="insertmobile"></h:link>
+                <h:column>
+                    <f:facet name="header">Model No</f:facet>
+                    <h:outputText value="#{m.modelno}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Name</f:facet>
+                    <h:outputText value="#{m.name}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Camera</f:facet>
+                    <h:outputText value="#{m.camera}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Company</f:facet>
+                    <h:outputText value="#{m.company}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Memory</f:facet>
+                    <h:outputText value="#{m.memory}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Size</f:facet>
+                    <h:outputText value="#{m.size}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">year</f:facet>
+                    <h:outputText value="#{m.year}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Category name</f:facet>
+                    <h:outputText value="#{m.cid.cname}"></h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{mobile.delete(m)}" value="Delete"></h:commandLink>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{mobile.edit(m)}" value="Edit"></h:commandLink>
+                </h:column>
+                
+            </h:dataTable>
+        </h:form>
+    </h:body>
+</html>
+
+
+insertmobile
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <h:form>
+            Name:<h:inputText value="#{mobile.name}"></h:inputText><br/>
+            Camera:<h:inputText value="#{mobile.camera}"></h:inputText><br/>
+            Company:<h:inputText value="#{mobile.company}"></h:inputText><br/>
+            Memory:<h:inputText value="#{mobile.memory}"></h:inputText><br/>
+            Size:<h:inputText value="#{mobile.size}"></h:inputText><br/>
+            Year:<h:inputText value="#{mobile.year}"></h:inputText><br/>
+            <h:selectOneMenu value="#{mobile.cid}">
+                <f:selectItems value="#{mobile.categorylist}" var="c" itemValue="#{c.cid}" itemLabel="#{c.cname}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{mobile.add()}"></h:commandButton>
+        </h:form>
+    </h:body>
+</html>
+
+editmobile
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <h:form>
+        Model no:<h:inputText value="#{mobile.modelno}"></h:inputText><br/>
+        Model name:<h:inputText value="#{mobile.name}"></h:inputText><br/>
+        Model camera:<h:inputText value="#{mobile.camera}"></h:inputText><br/>
+        Model company:<h:inputText value="#{mobile.company}"></h:inputText><br/>
+        Model memory:<h:inputText value="#{mobile.memory}"></h:inputText><br/>
+        Model size:<h:inputText value="#{mobile.size}"></h:inputText><br/>
+        Model year:<h:inputText value="#{mobile.year}"></h:inputText><br/>
+        <h:selectOneMenu value="#{mobile.cid}">
+            <f:selectItems value="#{mobile.categorylist}" var="c" itemValue="#{c.cid}" itemLabel="#{c.cname}">
+                </f:selectItems>
+            </h:selectOneMenu><br/>
+        <h:commandButton value="save" action="#{mobile.edit()}"></h:commandButton>
+        </h:form>
+    </h:body>
+</html>
+
+==========================================================================================
+QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+======================================FILTER WITH JSF=====================================
+
+
+/entity/Department.java			(Add the named query)
+========================================================
+
+@NamedQuery(name = "Department.findByDeptNames", query = "SELECT d FROM Department d WHERE d.deptName IN :deptNames")
+
+========================================================
+/beans/EmpBean.java				(Add this function with code)
+========================================================
+@Override
+    public Collection<Employee> getEmpByDeptNames(Collection<String> deptNames) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        
+        Collection<Department> depts=em.createNamedQuery("Department.findByDeptNames")
+                .setParameter("deptNames", deptNames)
+                .getResultList();
+        
+        Collection<Employee> emps=new ArrayList<Employee>();
+        
+        for(Department d:depts){
+            emps.addAll(d.getEmployeeCollection());
+        }
+        return emps;
+    }
+
+===============================================
+/ManagedBean/EmployeeBean
+===============================================
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package managedBeans;
+
+import beans.EmpBeanLocal;
+import entity.Department;
+import entity.Employee;
+import entity.Project;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.ejb.Init;
+import javax.inject.Named;
+import javax.enterprise.context.ApplicationScoped;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
+
+/**
+ *
+ * @author kruti
+ */
+@Named(value = "employeeBean")
+@ApplicationScoped
+public class EmployeeBean {
+
+    ///URL Not changing after edit, it should be reflect in url like "Display.xhtml"
+    @EJB
+    private EmpBeanLocal empBean;
+
+    Employee emp=new Employee();
+    Department dept=new Department();
+    
+    private Integer empId;
+    
+    private String fname;
+    private String lname;
+    
+    //@Size(max=2, message = "Age must contain 2 digit number")  
+    @Min(18)
+    private int age;
+    private int salary;
+    private Integer deptId;
+    
+    //private Department dept;
+    private Collection<Department> departments;
+    private Collection<Project> projectCollection;
+    private Collection<String> deptNms;
+    
+    public EmployeeBean() {
+    }
+
+    @PostConstruct          //IMPORTANT
+    public void init(){
+        this.departments=empBean.getAllDepartments();
+        this.deptNms=new ArrayList<String>();
+    }
+
+    public Collection<String> getDeptNms() {
+        return deptNms;
+    }
+
+    public void setDeptNms(Collection<String> deptNms) {
+        this.deptNms = deptNms;
+    }
+
+    
+    public Integer getEmpId() {
+        return empId;
+    }
+
+    public void setEmpId(Integer empId) {
+        this.empId = empId;
+    }
+
+    public String getFname() {
+        return fname;
+    }
+
+    public void setFname(String fname) {
+        this.fname = fname;
+    }
+
+    public String getLname() {
+        return lname;
+    }
+
+    public void setLname(String lname) {
+        this.lname = lname;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public int getSalary() {
+        return salary;
+    }
+
+    public void setSalary(int salary) {
+        this.salary = salary;
+    }
+
+    public Integer getDeptId() {
+        return deptId;
+    }
+
+    public void setDeptId(Integer deptId) {
+        this.deptId = deptId;
+    }
+
+    public Collection<Project> getProjectCollection() {
+        return projectCollection;
+    }
+
+    public void setProjectCollection(Collection<Project> projectCollection) {
+        this.projectCollection = projectCollection;
+    }
+
+    public Department getDept() {
+        return dept;
+    }
+
+    public void setDept(Department dept) {
+        this.dept = dept;
+    }
+    
+    public List<Employee> findAll(){
+        
+        if(deptNms.isEmpty()){
+            
+            return (List<Employee>) this.empBean.getAllEmployees();
+        }else{
+            
+            return (List<Employee>) this.empBean.getEmpByDeptNames(deptNms);
+        }
+    
+    }
+    
+    public String addEmployee(){
+        
+        empBean.addEmployee(fname, lname, age, salary, deptId);
+        
+        return "display";
+    }
+    
+    public String edit(Employee e){
+        this.emp=e;
+        this.empId=e.getEmpId();
+        this.dept=e.getDept();
+        this.fname=e.getFname();
+        this.lname=e.getLname();
+        this.age=e.getAge();
+        this.salary=e.getSalary();
+        this.deptId=e.getDept().getDeptId();
+        
+        return "Edit";
+    }
+
+    public Collection<Department> getDepartments() {
+        return departments;
+    }
+
+    public void setDepartments(Collection<Department> departments) {
+        this.departments = departments;
+    }
+    
+    
+    
+    public String edit(){
+        
+        empBean.updateEmployee(empId, fname, lname, age, salary, deptId);
+        this.emp=null;
+        this.empId=0;
+        this.dept=null;
+        this.fname="";
+        this.lname="";
+        this.age=0;
+        this.salary=0;
+        this.deptId=0;
+        return "display";
+    }
+    
+    public void deleteEmp(Integer id){
+        empBean.deleteEmployee(id);
+    }
+}
+
+========================================================
+display.xhtml
+========================================================
+
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+     >
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <center>
+            <h:form>
+                <br/>
+                <h:link value="Add Employee" outcome="Insert"></h:link>
+                
+                <br/><br/>
+                
+                <h:selectManyCheckbox id="deptSel" value="#{employeeBean.deptNms}">
+                    <f:ajax event="click" execute="deptSel" render="tb1" />
+                    <f:selectItems value="#{employeeBean.departments}" var="d" itemValue="#{d.deptName}" itemLabel="#{d.deptName}">
+                        
+                    </f:selectItems>
+                </h:selectManyCheckbox>
+                
+                
+                <br/><br/>
+        <h:dataTable id="tb1" var="e" value="#{employeeBean.findAll()}" border="1" cellpadding="1" width="500" cellspacing="1">
+            <h:column>
+                <f:facet name="header">Name</f:facet>
+                <h:outputText value="#{e.fname} #{e.lname}"></h:outputText>
+            </h:column>
+            
+            <h:column>
+                <f:facet name="header">Age</f:facet>
+                <h:outputText value="#{e.age}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Salary</f:facet>
+                <h:outputText value="#{e.salary}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Department</f:facet>
+                <h:outputText value="#{e.dept.deptName}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Edit</f:facet>
+                <h:commandLink value="Edit" action="#{employeeBean.edit(e)}"></h:commandLink>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Delete</f:facet>
+                <h:commandLink value="Delete" action="#{employeeBean.deleteEmp(e.empId)}" onclick="return confirm('Are you sure?')"></h:commandLink>
+            </h:column>
+        </h:dataTable>
+            </h:form>
+        </center>
+    </h:body>
+</html>
+==========================================================================================
+QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+ require="true";
+maxlength="5";
+
+VALIDATION EMAIL
+
+
+Email Address:
+          <h:inputText label="Email Address"
+                       id="email" value="mailid" required="true"
+                       requiredMessage="Please enter your email address."
+		validatorMessage="Invalid email format">
+          <f:validateRegex
+		pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)(\.[A-Za-z]{2,})$" />
+          </h:inputText>
+          <h:message for="email" style="color: red"/>
+========================================================================================
+
+for getting redymade from and datatable in jsf
+
+steps----------------------------
+
+toolbar + window + IDE tools + Pallete
+----------------
+drag and drop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
