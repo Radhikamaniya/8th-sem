@@ -1,0 +1,1396 @@
+Database -> new connection->MYSQL(Connector/J driver)->next.....
+
+DB conection
+
+JDBC
+===========================
+..JDBC Connection pool
+===========================
+new -> poolname ->res type -> javax.sql.datasource -> vender->Mysql
+
+Properties
+
+password->shruti
+url->jdbc:mysql://localhost:3306/ejdatabase?useSSL=false
+URL->jdbc:mysql://localhost:3306/ejdatabase?useSSL=false
+serverName->localhost
+driver->com.mysql.jdbc.Driver
+user->root
+driverClass->com.mysql.jdbc.Driver
+port->3306
+
+
+finish->ping
+
+=======================================================
+
+
+===========================
+..JDBC Resources
+===========================
+
+new -> JNDI name:jdbc/itpool
+Poolname -> select pool name
+ok
+
+
+*****************************************************************************************************************************************************************
+
+
+
+============================================================webApplicationCRUD=========================================
+
+new web application
+new->pU
+new->entityclassefromdatabase
+new ->sessionbean->in demo.java add (pu)
+@Stateless
+public class customer implements customerLocal {
+ --@PersistenceContext(unitName = "Jsf_MultipalTable_crudPU")
+   -- EntityManager em;
+    @Override
+
+...........change this in PU
+      <persistence-unit name="multitable_crud_Final_PU" transaction-type="JTA">
+      <jta-data-source>jdbc/itpool</jta-data-source>
+
+=====================================
+demolocal.java(bean)_
+=====================================
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package ejb;
+
+import entity.Address;
+import entity.Customer;
+import java.util.Collection;
+import javax.ejb.Local;
+
+/**
+ *
+ * @author Admin
+ */
+@Local
+public interface customerLocal {
+     // ====  Customer =========
+    Collection<Customer> getAllCustomers();
+     //==== Address =================
+     
+     void addAddresOfCustomer(String street, String city, String state, String zip, Integer custId);
+     void updateAddresOfCustomer(Integer addressId,String street, String city, String state, String zip, Integer custId);
+     void removeAddressOfCustomer(Integer addressId, Integer custId);
+     Collection<Address> getAddresesOfCustomer(Integer custId);
+     Collection<Address> getAddressesByCity(String city);
+     Collection<Address> getAddressesByState(String state);
+     Collection<Address> getAddressesByZip(String zip);
+     Collection<Address> getAddresses(String city, String State);
+}
+
+=====================================
+demo.java(bean)
+=====================================
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package ejb;
+
+import entity.Address;
+import entity.Customer;
+import java.util.Collection;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+/**
+ *
+ * @author Admin
+ */
+@Stateless
+public class customer implements customerLocal {
+@PersistenceContext(unitName = "multitable_crud_Final_PU")
+    EntityManager em;
+    @Override
+    public Collection<Customer> getAllCustomers() {
+        return em.createNamedQuery("Customer.findAll").getResultList();
+    }
+
+    @Override
+    public void addAddresOfCustomer(String street, String city, String state, String zip, Integer custId) {
+        Customer c = em.find(Customer.class, custId);
+    Collection<Address> addresses = c.getAddressCollection();
+    
+    Address address = new Address();
+    address.setStreet(street);
+    address.setCity(city);
+    address.setState(state);
+    address.setZip(zip);
+    address.setCustomerId(c); // Very Important
+    
+    addresses.add(address);
+    c.setAddressCollection(addresses);
+    
+    em.persist(address);
+    em.merge(c);
+    }
+
+    @Override
+    public void updateAddresOfCustomer(Integer addressId, String street, String city, String state, String zip, Integer custId) {
+         Address a=em.find(Address.class,addressId);
+         Customer c = em.find(Customer.class, custId);
+    
+//         a.setAddressId(addressId);
+         a.setState(state);
+          a.setCity(city);
+          a.setStreet(street);
+          a.setZip(zip);
+         a.setCustomerId(c);
+         
+       em.merge(a);
+    }
+
+    @Override
+    public void removeAddressOfCustomer(Integer addressId, Integer custId) {
+       Customer c = em.find(Customer.class, custId);
+    Address address = em.find(Address.class, addressId);
+    
+    Collection<Address> addresses = c.getAddressCollection();
+    
+    if(addresses.contains(address))
+    {
+        addresses.remove(address);
+        c.setAddressCollection(addresses);
+        em.remove(address);
+        em.merge(c);
+    }
+    }
+
+    @Override
+    public Collection<Address> getAddresesOfCustomer(Integer custId) {
+        Customer c = em.find(Customer.class, custId);
+    
+   return c.getAddressCollection();
+    }
+
+    @Override
+    public Collection<Address> getAddressesByCity(String city) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddressesByState(String state) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddressesByZip(String zip) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<Address> getAddresses(String city, String State) {
+         return em.createNamedQuery("Address.findAll").getResultList();
+    }
+
+    // Add business logic below. (Right-click in editor and choose
+    // "Insert Code > Add Business Method")
+}
+
+
+
+=================================
+new->jsf cdi bean
+scope->application
+
+
+
+=====================================
+
+folder Structure
+
+JSF_Multipletable_crud
+   -web pages
+       -web-inf
+          -editAddress.xhtml
+          -index.xhtml
+          -insert.xhtml
+    -Source packages
+       -customerAddress(Cdi bean)
+            -ManagedBean.java
+       -Ejb(sessionbean)
+            -customer.java
+            -customerLocal.java
+       -entity
+             
+ =============
+managedBean
+================
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package customerAddress;
+
+import ejb.customerLocal;
+import entity.Address;
+import entity.Customer;
+import java.util.Collection;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.inject.Named;
+import javax.enterprise.context.ApplicationScoped;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+/**
+ *
+ * @author Radhika Maniya
+ */
+@Named(value = "managedBean")
+@ApplicationScoped
+public class ManagedBean {
+
+    @EJB
+    private customerLocal customer;
+    
+    Customer c = new Customer();
+    Address a = new Address();
+    
+    
+            
+    Collection<Customer> castomer;
+    private int addressId;
+    private int customerId;
+    private String street;
+    private String city;
+    private String state;
+    private String zip;
+
+    public Customer getC() {
+        return c;
+    }
+
+    public void setC(Customer c) {
+        this.c = c;
+    }
+
+    public Address getA() {
+        return a;
+    }
+
+    public void setA(Address a) {
+        this.a = a;
+    }
+
+    public Collection<Customer> getCastomer() {
+        return castomer;
+    }
+
+    public void setCastomer(Collection<Customer> castomer) {
+        this.castomer = castomer;
+    }
+
+    public int getAddressId() {
+        return addressId;
+    }
+
+    public void setAddressId(int addressId) {
+        this.addressId = addressId;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getZip() {
+        return zip;
+    }
+
+    public void setZip(String zip) {
+        this.zip = zip;
+    }
+
+   
+    /**
+     * Creates a new instance of ManagedBean
+     */
+    public ManagedBean() {
+       
+    }
+      @PostConstruct
+    public void init(){
+        castomer = customer.getAllCustomers();
+    }
+    public Collection<Address> ShowAddresses(){
+           return customer.getAddresses(city, state);  
+    }
+    
+    public String addAddress(){
+        customer.addAddresOfCustomer(street, city, state, zip, customerId);
+        return "index";
+    }
+    
+    public void deleteAddress(){
+       customer.removeAddressOfCustomer(addressId, customerId);
+    }
+    
+    public String edit(Address A)
+    {
+        this.addressId=A.getAddressId();
+        this.state=A.getState();
+        this.city=A.getCity();
+        this.street=A.getStreet();
+        this.zip=A.getZip();
+        Customer c = A.getCustomerId();
+        this.customerId =c.getCustomerID();
+        this.a = new Address();
+        return "editAddress";
+        
+    }
+    
+    public String edit()
+    {
+        this.customer.updateAddresOfCustomer(addressId, street, city, state, zip, customerId);
+        return "index";
+    }
+    
+    public void delete(Address add)
+    {
+        this.addressId = add.getAddressId();
+        Customer c = add.getCustomerId();
+        this.customerId = c.getCustomerID();
+        this.customer.removeAddressOfCustomer(addressId, customerId);
+    }
+}
+
+
+
+=================================
+editAddress.xml
+=================================
+     <?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        Hello from Facelets
+        <h:form>
+            state:<h:inputText value="#{managedBean.state}"></h:inputText><br/>
+            city:<h:inputText value="#{managedBean.city}"></h:inputText><br/>
+            street:<h:inputText value="#{managedBean.street}"></h:inputText><br/>
+            zip:<h:inputText value="#{managedBean.zip}"></h:inputText><br/>
+           
+            <h:selectOneMenu value="#{managedBean.customerId}">
+                <f:selectItems value="#{managedBean.castomer}" var="c" itemValue="#{c.customerID}" itemLabel="#{c.firstName}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{managedBean.edit()}"></h:commandButton>
+        </h:form>
+        
+
+    </h:body>
+</html>
+
+===========================
+index.xhtml
+===========================
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        Hello from Facelets<f:view>
+
+ <h:link value="Add Mobile" outcome="insertAddress"></h:link>
+            <h:form>
+                <h1><h:outputText value="List"/></h1>
+                <h:dataTable value="#{managedBean.ShowAddresses()}" var="item">
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="AddressId"/>
+                        </f:facet>
+                        <h:outputText value="#{item.addressId}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Street"/>
+                        </f:facet>
+                        <h:outputText value="#{item.street}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="City"/>
+                        </f:facet>
+                        <h:outputText value="#{item.city}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="State"/>
+                        </f:facet>
+                        <h:outputText value="#{item.state}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Zip"/>
+                        </f:facet>
+                        <h:outputText value="#{item.zip}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="CustomerId"/>
+                        </f:facet>
+                        <h:outputText value="#{item.customerId.firstName}"/>
+                    </h:column>
+                    <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{managedBean.delete(item)}" value="Delete"></h:commandLink>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Option</f:facet>
+                    <h:commandLink action="#{managedBean.edit(item)}" value="Edit"></h:commandLink>
+                </h:column>
+                </h:dataTable>
+            </h:form>
+        </f:view>
+
+    </h:body>
+</html>
+
+
+============================
+insertAddress.xhtml
+==========================
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+          <h:head>
+        <title>Facelet Title</title>
+           </h:head>
+    <h:body>
+
+<h:form>
+            state:<h:inputText value="#{managedBean.state}"></h:inputText><br/>
+            city:<h:inputText value="#{managedBean.city}"></h:inputText><br/>
+            street:<h:inputText value="#{managedBean.street}"></h:inputText><br/>
+            zip:<h:inputText value="#{managedBean.zip}"></h:inputText><br/>
+           
+            <h:selectOneMenu value="#{managedBean.customerId}">
+                <f:selectItems value="#{managedBean.castomer}" var="c" itemValue="#{c.customerID}" itemLabel="#{c.firstName}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{managedBean.addAddress()}"></h:commandButton>
+        </h:form>
+    
+    </h:body>
+</html>
+************************************************************************search**************************************************
+
+/entity/Department.java			(Add the named query)
+========================================================
+
+@NamedQuery(name = "Department.findByDeptNames", query = "SELECT d FROM Department d WHERE d.deptName IN :deptNames")
+
+========================================================
+/beans/EmpBean.java				(Add this function with code)
+========================================================
+@Override
+    public Collection<Employee> getEmpByDeptNames(Collection<String> deptNames) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        
+        Collection<Department> depts=em.createNamedQuery("Department.findByDeptNames")
+                .setParameter("deptNames", deptNames)
+                .getResultList();
+        
+        Collection<Employee> emps=new ArrayList<Employee>();
+        
+        for(Department d:depts){
+            emps.addAll(d.getEmployeeCollection());
+        }
+        return emps;
+    }
+
+===============================================
+/ManagedBean/EmployeeBean
+===============================================
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package managedBeans;
+
+import beans.EmpBeanLocal;
+import entity.Department;
+import entity.Employee;
+import entity.Project;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.ejb.Init;
+import javax.inject.Named;
+import javax.enterprise.context.ApplicationScoped;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
+
+/**
+ *
+ * @author kruti
+ */
+@Named(value = "employeeBean")
+@ApplicationScoped
+public class EmployeeBean {
+
+    ///URL Not changing after edit, it should be reflect in url like "Display.xhtml"
+    @EJB
+    private EmpBeanLocal empBean;
+
+    Employee emp=new Employee();
+    Department dept=new Department();
+    
+    private Integer empId;
+    
+    private String fname;
+    private String lname;
+    
+    //@Size(max=2, message = "Age must contain 2 digit number")  
+    @Min(18)
+    private int age;
+    private int salary;
+    private Integer deptId;
+    
+    //private Department dept;
+    private Collection<Department> departments;
+    private Collection<Project> projectCollection;
+    private Collection<String> deptNms;
+    
+    public EmployeeBean() {
+    }
+
+    @PostConstruct          //IMPORTANT
+    public void init(){
+        this.departments=empBean.getAllDepartments();
+        this.deptNms=new ArrayList<String>();
+    }
+
+    public Collection<String> getDeptNms() {
+        return deptNms;
+    }
+
+    public void setDeptNms(Collection<String> deptNms) {
+        this.deptNms = deptNms;
+    }
+
+    
+    public Integer getEmpId() {
+        return empId;
+    }
+
+    public void setEmpId(Integer empId) {
+        this.empId = empId;
+    }
+
+    public String getFname() {
+        return fname;
+    }
+
+    public void setFname(String fname) {
+        this.fname = fname;
+    }
+
+    public String getLname() {
+        return lname;
+    }
+
+    public void setLname(String lname) {
+        this.lname = lname;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public int getSalary() {
+        return salary;
+    }
+
+    public void setSalary(int salary) {
+        this.salary = salary;
+    }
+
+    public Integer getDeptId() {
+        return deptId;
+    }
+
+    public void setDeptId(Integer deptId) {
+        this.deptId = deptId;
+    }
+
+    public Collection<Project> getProjectCollection() {
+        return projectCollection;
+    }
+
+    public void setProjectCollection(Collection<Project> projectCollection) {
+        this.projectCollection = projectCollection;
+    }
+
+    public Department getDept() {
+        return dept;
+    }
+
+    public void setDept(Department dept) {
+        this.dept = dept;
+    }
+    
+    public List<Employee> findAll(){
+        
+        if(deptNms.isEmpty()){
+            
+            return (List<Employee>) this.empBean.getAllEmployees();
+        }else{
+            
+            return (List<Employee>) this.empBean.getEmpByDeptNames(deptNms);
+        }
+    
+    }
+    
+    public String addEmployee(){
+        
+        empBean.addEmployee(fname, lname, age, salary, deptId);
+        
+        return "display";
+    }
+    
+    public String edit(Employee e){
+        this.emp=e;
+        this.empId=e.getEmpId();
+        this.dept=e.getDept();
+        this.fname=e.getFname();
+        this.lname=e.getLname();
+        this.age=e.getAge();
+        this.salary=e.getSalary();
+        this.deptId=e.getDept().getDeptId();
+        
+        return "Edit";
+    }
+
+    public Collection<Department> getDepartments() {
+        return departments;
+    }
+
+    public void setDepartments(Collection<Department> departments) {
+        this.departments = departments;
+    }
+    
+    
+    
+    public String edit(){
+        
+        empBean.updateEmployee(empId, fname, lname, age, salary, deptId);
+        this.emp=null;
+        this.empId=0;
+        this.dept=null;
+        this.fname="";
+        this.lname="";
+        this.age=0;
+        this.salary=0;
+        this.deptId=0;
+        return "display";
+    }
+    
+    public void deleteEmp(Integer id){
+        empBean.deleteEmployee(id);
+    }
+}
+
+========================================================
+display.xhtml
+========================================================
+
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+     >
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <center>
+            <h:form>
+                <br/>
+                <h:link value="Add Employee" outcome="Insert"></h:link>
+                
+                <br/><br/>
+                
+                <h:selectManyCheckbox id="deptSel" value="#{employeeBean.deptNms}">
+                    <f:ajax event="click" execute="deptSel" render="tb1" />
+                    <f:selectItems value="#{employeeBean.departments}" var="d" itemValue="#{d.deptName}" itemLabel="#{d.deptName}">
+                        
+                    </f:selectItems>
+                </h:selectManyCheckbox>
+                
+                
+                <br/><br/>
+        <h:dataTable id="tb1" var="e" value="#{employeeBean.findAll()}" border="1" cellpadding="1" width="500" cellspacing="1">
+            <h:column>
+                <f:facet name="header">Name</f:facet>
+                <h:outputText value="#{e.fname} #{e.lname}"></h:outputText>
+            </h:column>
+            
+            <h:column>
+                <f:facet name="header">Age</f:facet>
+                <h:outputText value="#{e.age}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Salary</f:facet>
+                <h:outputText value="#{e.salary}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Department</f:facet>
+                <h:outputText value="#{e.dept.deptName}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Edit</f:facet>
+                <h:commandLink value="Edit" action="#{employeeBean.edit(e)}"></h:commandLink>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Delete</f:facet>
+                <h:commandLink value="Delete" action="#{employeeBean.deleteEmp(e.empId)}" onclick="return confirm('Are you sure?')"></h:commandLink>
+            </h:column>
+        </h:dataTable>
+            </h:form>
+        </center>
+    </h:body>
+</html>
+
+
+************************************************************************End search**************************************************
+
+
+
+***************************************************************JSF validation****************************************************
+Email Address:
+          <h:inputText label="Email Address"
+                       id="email" value="mailid" required="true"
+                       requiredMessage="Please enter your email address."
+		validatorMessage="Invalid email format">
+          <f:validateRegex
+		pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)(\.[A-Za-z]{2,})$" />
+          </h:inputText>
+          <h:message for="email" style="color: red"/>
+//Primefaces
+
+
+<p:password id="password" value="#{bean.password}" match="repeated_password" />
+
+<p:password id="repeated_password" value="#{bean.password}" />
+
+//second type
+
+
+<h:inputSecret id="password" value="#{personHome.person.password}" />
+<h:message for="password" />
+
+<h:inputSecret id="password2" />
+<h:message for="password2" />
+
+<o:validateEqual components="password password2" 
+    message="Passwords do not match!" showMessageFor="password2" />
+
+//third type
+
+<h:inputSecret id="password" value="#{personHome.person.password}">
+  <f:ajax event="blur" render="passwordError" />
+</h:inputSecret> 
+<h:message for="password" errorClass="invalid" id="passwordError" />
+
+<h:inputSecret id="password2" validator="#{personHome.validateSamePassword}">
+  <f:ajax event="blur" render="password2Error" />
+</h:inputSecret> 
+<h:message for="password2" errorClass="invalid" id="password2Error" />
+
+
+(bean)
+
+@Named @ConversationScoped
+public class PersonHome {
+  private Person person;
+
+  public Person getPerson() {
+    if (person == null) return new Person();
+    else return person;
+  }
+
+  public void validateSamePassword(context:FacesContext, toValidate:UIComponent, value:Object) {
+    String confirmPassword = (String)value;
+    if (!confirmPassword.equals(person.getPassword()) {
+      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Passwords do not match!", "Passwords do not match!")
+      throw new Validatorexception(message);
+    }
+  }
+
+
+
+phone no regu=^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$
+
+
+***************************************************************End JSF validation****************************************************
+
+
+
+***************************************************************Method with more than one foregin key****************************************************
+----------------
+beanlocal
+-----------------
+
+ Collection<Packages> getAllPackages();
+      void addPackages(String PackageName,Integer CategoryID,Integer StateID,Integer NoOfDays,Integer NoOfNights,Integer PackageCharge, DateTime FromDate,DateTime ToDate,String Image1,String Image2,String Image3,String Image4,String ScheduleDescription);
+      void updatePackages(Integer PackageID,String PackageName,Integer CategoryID,Integer StateID,Integer NoOfDays,Integer NoOfNights,Integer PackageCharge, DateTime FromDate,DateTime ToDate,String Image1,String Image2,String Image3,String Image4,String ScheduleDescription);
+      void removePackages(Integer PackageID);
+       Collection<Packages> SearchPacagesByName(String PackageName);
+      Packages SearchPacagesById(Integer PackageID);
+------------------------
+bean.java
+------------------------
+
+
+    @Override
+    public void addPackages(String PackageName, Integer CategoryID, Integer StateID, Integer NoOfDays, Integer NoOfNights, Integer PackageCharge, DateTime FromDate, DateTime ToDate, String Image1, String Image2, String Image3, String Image4, String ScheduleDescription) {
+     Category c = em.find(Category.class, CategoryID);
+     
+//     System.out.println(c);
+     State s=em.find(State.class,StateID);
+     
+     // !packagess.isEmpty() 
+     
+     if(c != null && s != null)
+     {
+        Collection<Packages> packagess = c.getPackagesCollection();
+        Collection<Packages> packagess1 = s.getPackagesCollection();
+     Packages packages = new Packages();
+     packages.setPackageName(PackageName);
+     packages.setCategoryID(c);
+     packages.setStateID(s);
+     packages.setNoOfDays(NoOfDays);
+     packages.setNoOfNights(NoOfNights);
+     packages.setPackageCharge(PackageCharge);
+     //packages.setFromDate((Date) fromDate);  //new Date()
+     packages.setFromDate(new Date());
+     //packages.setToDate((Date) toDate);
+     packages.setToDate(new Date());
+     packages.setImage1(Image1);
+     packages.setImage2(Image2);
+     packages.setImage3(Image3);
+     packages.setImage4(Image4);
+     packages.setScheduleDescription(ScheduleDescription);
+     packagess.add(packages);
+     packagess1.add(packages);
+        em.persist(packages);
+        em.merge(c);
+        em.merge(s);
+     }
+     
+    
+    // packages.setFromDate(fromDate);
+     
+    }
+
+
+    @Override
+    public void updatePackages(Integer PackageID, String PackageName, Integer CategoryID, Integer StateID, Integer NoOfDays, Integer NoOfNights, Integer PackageCharge, DateTime FromDate, DateTime ToDate, String Image1, String Image2, String Image3, String Image4, String ScheduleDescription) {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+         Packages p= em.find(Packages.class,PackageID);
+         
+         Category c = em.find(Category.class, CategoryID);
+         
+         System.out.println(p);
+         System.out.println(c);
+         
+         State s =em.find(State.class, StateID);
+          System.out.println(s);
+         p.setPackageName(PackageName);
+         p.setCategoryID(c);
+         p.setStateID(s);
+         p.setNoOfDays(NoOfDays);
+         p.setNoOfNights(NoOfNights);
+         p.setPackageCharge(PackageCharge);
+         p.setFromDate(new Date());
+         p.setToDate(new Date());
+         p.setImage1(Image1);
+         p.setImage2(Image2);
+         p.setImage3(Image3);
+         p.setImage4(Image4);
+         p.setScheduleDescription(ScheduleDescription);
+         
+         
+                 
+      
+       em.merge(p);
+    }
+
+    @Override
+    public void removePackages(Integer PackageID) {
+         Packages p= em.find(Packages.class,PackageID);
+         em.remove(p);
+    
+    }
+
+    @Override
+    public Collection<Packages> SearchPacagesByName(String PackageName) {
+          Collection<Packages> packages = em.createNamedQuery("Packages.findByPackageName")
+             .setParameter("packageName", PackageName)
+             .getResultList();
+     
+     return packages;
+    }
+
+   
+    @Override
+    public Packages SearchPacagesById(Integer PackageID) {
+        return em.find(Packages.class, PackageID);
+    }
+
+
+
+------------------------
+servlet
+----------------------
+public class AdminServletFinal extends HttpServlet {
+@EJB AdminBeanLocal pbl;
+
+
+
+           //pbl.addPackages("second",1,3,3,3,30000,null ,null,"jkhjghj","hjkhk","hjvhjhj", "hgj","ghccghcgfcgf");
+           // pbl.addPackages("first",1,2,2,3,300,null ,null,"jkhjghj","hjkhk","hjvhjhj", "hgj","ghccghcgfcgf");
+           
+           //pbl.updatePackages(1,"FIrstttt",1,3,2,30,10,null ,null,"jkhjghj","hjkhk","hjvhjhj", "hgj","ghccghcgfcgf");
+           // pbl.removePackages(2);
+            // Collection<Packages> packages = pbl.SearchPacagesByName("second");
+             //for(Packages p : packages)
+            // {
+             // out.println("<br/>PackageName : "+ p.getPackageName() + " Charge : " + p.getPackageCharge());
+             //}
+            // Packages packages = pbl.SearchPacagesById(1);
+             //out.println("<br/>PackageName : "+ packages.getPackageName() + " Charge : " + packages.getPackageCharge());
+             
+             
+
+
+
+
+
+
+
+
+***************************************************************End Method with more than one foregin key****************************************************
+
+
+****************************************************************EE Application CRUD**********************************************************
+
+
+
+
+*****************************************************************************************************************************************************************
+=========================================================
+
+   CRUD (enterprise)(net)(jsf,ejb)
+============================================================================
+
+
+
+crud using EJB Jpa JSF
+
+ ===new->project->Java EE->Enterpriseapplication->next->finish
+===in ejb project folder with (demo-ejb) -> rightclick on source packages->create new entityclasses from db ->select connection pool->
+give packagename(entities)->add table->next->select checkbox of create pu->collectiontype(Java.util.list)->finsih
+======rightclic->soursepackage->new->other-> persitance->sessionbean for entity classes->next->add entity-> give package name(model)->finish
+=======right click (demo-war ) -> properties->frameworks->add->javaserverfaces->ok->index.xhtml is addes
+========remove index.html
+=========in (demo-war) file source packages->new ->other->javaserver faces->JSF manages bean->package name(Controller)->scope(session)->finish
+(optional 12.4) =========in mynetbeanse (demo-war)-> jsf ->jsf CDI bean(clientController)
+=============check project -> demoJSFApp(first) -> clean and build -> and run
+====in controller->insertcode->callenterpricebean->select(-ejb)->than (ex:personfadback)->ok->
+   === add all method for opeation(crud)	
+======================================================== 
+public List<Customer> findAll(){
+        return this.customerFacade.findAll();
+    }
+
+    -in index.xhtml->tack <h:form>
+    -go to window
+    -IDE tool
+    -palette
+    -JSF->JSF data table from entity->select->ok
+    - code is added
+
+=========================================================
+take one instance in controller
+
+ @EJB====auto
+    private CustomerFacade customerFacade;======auto
+    private Customer cust=new Customer();=====write this line
+  right click -insert code->getter and setter->select first heckbox->geratate
+
+insertmethod
+
+public String insert()
+    {
+        this.customerFacade.create(cust);
+        this.cust=new Customer();
+        return "index";
+    }
+
+webpages->new ->jsfpage->give name insert
+between trag and drop jsf form from entity->select->entity and all
+add command button 
+<h:commandButton value="Insert" action="#{clientController.insert()}"/>
+-------------------------------------
+--set link in index page()
+   <h:link value="insert record" outcome="insert"/>
+
+-----------------------------------
+ 
+===================================================================================
+
+delete
+
+add one action column in index page\
+
+ <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Action"/>
+                            </f:facet>
+                             <h:commandButton value="delete"
+                                            action="#{clientController.delete(item)}" 
+                                            onclick="return confirm('are you sure')" >
+                                 
+                             </h:commandButton>
+                        </h:column>
+
+
+        
+add delete method in controller
+
+ public String delete(Customer cust)
+    {
+        this.customerFacade.remove(cust);
+        return "index";
+    }
+
+
+
+==================================================================
+
+update
+
+add colum in index
+
+<h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Action"/>
+                            </f:facet>
+                             <h:commandButton value="update"
+                                              action="#{clientController.update(item)}">
+                                 
+                             </h:commandButton>
+                        </h:column>       
+   
+
+------------------insert method in controller
+  public String update(Customer cust)
+    {
+       this.cust=cust;
+       return "update";
+    }
+    public String update()
+    {
+        this.customerFacade.edit(cust);
+        return "index";
+         
+    }
+
+
+new jsf page->update
+
+ take jsf form from entity
+add button at end
+<h:commandButton value="update" action="#{clientController.update()}"/>
+
+
+=====================================================================================================================================================
+
+ClientController
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import entity.Customer;
+import javax.inject.Named;
+import javax.enterprise.context.SessionScoped;
+import java.io.Serializable;
+import java.util.List;
+import javax.ejb.EJB;
+import model.CustomerFacade;
+
+/**
+ *
+ * @author Admin
+ */
+@Named(value = "clientController")
+@SessionScoped
+public class clientController implements Serializable {
+
+    @EJB
+    private CustomerFacade customerFacade;
+    private Customer cust=new Customer();
+
+    /**
+     * Creates a new instance of clientController
+     */
+    public clientController() {
+    }
+
+    public Customer getCust() {
+        return cust;
+    }
+
+    public void setCust(Customer cust) {
+        this.cust = cust;
+    }
+        
+    public List<Customer> findAll(){
+        return this.customerFacade.findAll();
+    }
+      
+    public String delete(Customer cust)
+    {
+        this.customerFacade.remove(cust);
+        return "index";
+    }
+    public String update(Customer cust)
+    {
+       this.cust=cust;
+       return "update";
+    }
+    public String update()
+    {
+        this.customerFacade.edit(cust);
+        return "index";
+         
+    }
+}
+
+
+====================================inedx.xhtml
+
+
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Practice </title>
+    </h:head>
+    <h:body>
+        <h:form>
+            <f:view>
+
+
+                <h:form>
+                    <h1><h:outputText value="CustomerList"/></h1>
+                    
+                    <h:link value="insert record" outcome="insert"/>
+                    
+                    <h:dataTable value="#{clientController.findAll()}" var="item" border="1">
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="CustomerID"/>
+                            </f:facet>
+                            <h:outputText value="#{item.customerID}"/>
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="FirstName"/>
+                            </f:facet>
+                            <h:outputText value="#{item.firstName}"/>
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="LastName"/>
+                            </f:facet>
+                            <h:outputText value="#{item.lastName}"/>
+                        </h:column>
+                         <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Action"/>
+                            </f:facet>
+                             <h:commandButton value="delete"
+                                            action="#{clientController.delete(item)}" 
+                                            onclick="return confirm('are you sure')" >
+                                 
+                             </h:commandButton>
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">
+                                <h:outputText value="Action"/>
+                            </f:facet>
+                             <h:commandButton value="update"
+                                              action="#{clientController.update(item)}">
+                                 
+                             </h:commandButton>
+                        </h:column>
+                    </h:dataTable>
+                </h:form>
+            </f:view>
+
+        </h:form>
+    </h:body>
+</html>
+
+
+
+========================================update.xhtml
+
+
+
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>update</title>
+    </h:head>
+    <h:body>
+        <f:view>
+
+
+            <h:form>
+                <h1><h:outputText value="Create/Edit"/></h1>
+                <h:panelGrid columns="2">
+                    
+                    <h:outputLabel value="FirstName:" for="firstName" />
+                    <h:inputText id="firstName" value="#{clientController.cust.firstName}" title="FirstName" required="true" requiredMessage="The FirstName field is required."/>
+                    <h:outputLabel value="LastName:" for="lastName" />
+                    <h:inputText id="lastName" value="#{clientController.cust.lastName}" title="LastName" required="true" requiredMessage="The LastName field is required."/>\
+                    <h:commandButton value="update" action="#{clientController.update()}"/>
+                    
+                    
+                </h:panelGrid>
+            </h:form>
+        </f:view>
+ 
+    </h:body>
+</html>
+
+
+============================================insert.xhtml
+
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>insert details</title>
+    </h:head>
+    <h:body>
+        <f:view>
+
+
+            <h:form>
+                <h1><h:outputText value="Createt"/></h1>
+                <h:panelGrid columns="2">
+                    <h:outputLabel value="CustomerID:" for="customerID" />
+                    <h:inputText id="customerID" value="#{clientController.cust.customerID}" title="CustomerID" required="true" requiredMessage="The CustomerID field is required."/>
+                    <h:outputLabel value="FirstName:" for="firstName" />
+                    <h:inputText id="firstName" value="#{clientController.cust.firstName}" title="FirstName" required="true" requiredMessage="The FirstName field is required."/>
+                    <h:outputLabel value="LastName:" for="lastName" />
+                    <h:inputText id="lastName" value="#{clientController.cust.lastName}" title="LastName" required="true" requiredMessage="The LastName field is required."/>
+                    <h:commandButton value="Insert" action="#{clientController.insert()}"/>
+                </h:panelGrid>
+            </h:form>
+        </f:view>
+
+    </h:body>
+</html>
+
+
+=======================validation=====================
+   <h:inputText id="deptName" value="#{departmentbean.deptName}" title="Departemnt Name" required="true"
+                                 requiredMessage="This field is required"  /><br/>
+
+======================================================
+
+********************************************************************************************************************************************************************************
+
+
+========================================================================
+crud(ejb)collage
+========================================================================
+ 
+
