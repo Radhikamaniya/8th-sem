@@ -1,4 +1,19 @@
 =====================================================================================================================================
+  password
+  url
+  jdbc:mysql://localhost:3306/travelmanagementsystem?useSSL=false 
+  URL
+  jdbc:mysql://localhost:3306/travelmanagementsystem?useSSL=false
+  serverName
+  localhost
+  driver
+  com.mysql.jdbc.Driver
+  user
+  root
+  driverClass
+  com.mysql.jdbc.Driver
+  port
+  3306
 ===================================2 TABLE CRUD WITH JSF============================================
 
 prepare database ,coonection bridge,insert driver,persistant unit,entity,ejbs,managed Bean (right click+new+other+jsf CDI Bean,inside that scope application )(addinser code+callenterprise bean+select your ejvlocal+okay)
