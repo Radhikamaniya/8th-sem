@@ -1,7 +1,4 @@
-Name:Maniya Radhika Vinodbhai.
-subject:Android.
-Assignment:Practical 2.
-Roll NO:26
+
 Main_Activity.xml
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
