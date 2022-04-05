@@ -1,0 +1,793 @@
+Name:Maniya Radhika Vinodbhai.
+subject:Android.
+Assignment:Practical 2.
+Roll NO:26
+Main_Activity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity">
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintEnd_toEndOf="parent"
+app:layout_constraintStart_toStartOf="parent"
+app:layout_constraintTop_toTopOf="parent">
+<EditText
+android:id="@+id/ed1"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="name:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed2"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="age:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed3"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="address:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed4"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="city:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed5"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="phone:"
+android:inputType="textPersonName" />
+<Button
+android:id="@+id/b1"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="submit" />
+</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
+Main_activity.java
+package com.example.ass2_1displayinformation;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+public class MainActivity extends AppCompatActivity {
+EditText edname,edage,edaddress,edcity,edphone;
+Button button;
+int age;
+int phone;
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+edname = findViewById(R.id.ed1);
+edage= findViewById(R.id.ed2);
+edaddress = findViewById(R.id.ed3);
+edcity= findViewById(R.id.ed4);
+edphone = findViewById(R.id.ed5);
+button = findViewById(R.id.b1);
+button.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View view) {
+age = Integer.parseInt(edage.getText().toString());
+phone = Integer.parseInt(edphone.getText().toString());
+Intent i = new
+Intent(getApplicationContext(),MainActivity2.class);
+i.putExtra("name",edname.getText().toString());
+i.putExtra("age",age);
+i.putExtra("address",edaddress.getText().toString());
+i.putExtra("city",edcity.getText().toString());
+i.putExtra("phone",phone);
+startActivity(i);
+}
+});
+}
+}
+MainActivity2.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity2">
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintEnd_toEndOf="parent"
+app:layout_constraintStart_toStartOf="parent"
+app:layout_constraintTop_toTopOf="parent">
+<TextView
+android:id="@+id/tv1"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv2"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv3"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv4"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv5"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
+MainActivity2.java
+package com.example.ass2_1displayinformation;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.TextView;
+public class MainActivity2 extends AppCompatActivity {
+TextView tvname,tvage,tvaddress,tvcity,tvphone;
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main2);
+tvname = findViewById(R.id.tv1);
+tvage =findViewById(R.id.tv2);
+tvaddress =findViewById(R.id.tv3);
+tvcity=findViewById(R.id.tv4);
+tvphone =findViewById(R.id.tv5);
+Intent i = getIntent();
+int ph;
+int ag =i.getIntExtra("age",0);
+ph=i.getIntExtra("phone",0);
+tvname.setText(i.getStringExtra("name"));
+tvage.setText("age is"+ag);
+// Toast.makeText(this, "age is"+ag, Toast.LENGTH_SHORT).show();
+// Toast.makeText(this, "phone is"+ph, Toast.LENGTH_SHORT).show();
+tvaddress.setText(i.getStringExtra("address"));
+tvcity.setText(i.getStringExtra("city"));
+tvphone.setText("phone is"+ph);
+}
+}
+OutPut
+=================2==================
+MainActivity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".Activity2">
+<Button
+android:id="@+id/btnAddToList"
+android:layout_width="304dp"
+android:layout_height="88dp"
+android:layout_below="@+id/txtAdd"
+android:layout_alignParentStart="true"
+android:layout_alignParentEnd="true"
+android:layout_marginStart="66dp"
+android:layout_marginTop="37dp"
+android:layout_marginEnd="41dp"
+android:text="Add Item to ListView"
+android:textSize="20sp" />
+<EditText
+android:id="@+id/txtAdd"
+android:layout_width="261dp"
+android:layout_height="wrap_content"
+android:layout_alignParentStart="true"
+android:layout_alignParentTop="true"
+android:layout_alignParentEnd="true"
+android:layout_marginStart="83dp"
+android:layout_marginTop="51dp"
+android:layout_marginEnd="67dp"
+android:ems="10"
+android:hint="Enter item to add"
+android:inputType="textPersonName" />
+<ListView
+android:id="@+id/listView"
+android:layout_width="306dp"
+android:layout_height="wrap_content"
+android:layout_below="@+id/btnAddToList"
+android:layout_alignParentStart="true"
+android:layout_alignParentEnd="true"
+android:layout_alignParentBottom="true"
+android:layout_marginStart="55dp"
+android:layout_marginTop="40dp"
+android:layout_marginEnd="50dp"
+android:layout_marginBottom="130dp" />
+</RelativeLayout>
+Main_activity.java
+package com.example.ass2_2addremoveitem;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+public class MainActivity extends AppCompatActivity {
+ListView listView;
+Button addButton;
+EditText GetValue;
+String[] ListElements = new String[]{
+"Apple","Mango","orange","Watermelon"};
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+addButton = findViewById(R.id.btnAddToList);
+listView =findViewById(R.id.listView);
+GetValue = findViewById(R.id.txtAdd);
+List<String> ListElementsArrayList = new
+ArrayList<>(Arrays.asList(ListElements));
+ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this,
+android.R.layout.simple_list_item_1,ListElementsArrayList);
+listView.setAdapter(adapter);
+addButton.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View view) {
+ListElementsArrayList.add(GetValue.getText().toString());
+GetValue.setText("");
+adapter.notifyDataSetChanged();
+}
+});
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+@Override
+public void onItemClick(AdapterView<?> adapterView, View view, int
+i, long l) {
+ListElementsArrayList.remove(i);
+adapter.notifyDataSetChanged();
+Toast.makeText(MainActivity.this, "Item Removed",
+Toast.LENGTH_SHORT).show();
+}
+});
+}
+}
+Output:
+
+============================3============================
+ActivityMain.xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity">
+<ListView
+android:id="@+id/listview"
+android:layout_width="409dp"
+android:layout_height="354dp"
+tools:ignore="MissingConstraints"
+tools:layout_editor_absoluteX="1dp"
+tools:layout_editor_absoluteY="1dp" />
+</RelativeLayout>
+ActivityMain.java
+package com.example.ass2_3listview;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import java.util.ArrayList;
+import java.util.List;
+public class MainActivity<arrayAdapter> extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+ListView listView=findViewById(R.id.listview);
+List<String> list=new ArrayList<>();
+list.add("RED");
+list.add("ORANGE");
+list.add("YELLOW");
+ArrayAdapter arrayAdapter=new ArrayAdapter(getApplicationContext(),
+android.R.layout.simple_list_item_1,list);
+listView.setAdapter(arrayAdapter);
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+@Override
+public void onItemClick(AdapterView<?> parent, View view, int position,
+long id) {
+if(position==0)
+{
+startActivity(new Intent(MainActivity.this,apple.class));
+}
+if(position==1)
+{
+startActivity(new Intent(MainActivity.this,orange.class));
+}
+if(position==2)
+{
+startActivity(new Intent(MainActivity.this,yellow.class));
+}
+}
+});
+}
+}
+red.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".apple">
+<TextView
+android:id="@+id/textView"
+android:layout_width="287dp"
+android:layout_height="56dp"
+android:text="RED"
+android:textAlignment="center"
+android:textSize="24sp"
+tools:layout_editor_absoluteX="62dp"
+tools:layout_editor_absoluteY="456dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+red.java
+package com.example.ass2_3listview;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+public class apple extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_apple);
+}
+}
+Orange.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".orange">
+<TextView
+android:id="@+id/textView2"
+android:layout_width="277dp"
+android:layout_height="50dp"
+android:text="ORANGE"
+android:textAlignment="center"
+android:textSize="24sp"
+tools:layout_editor_absoluteX="67dp"
+tools:layout_editor_absoluteY="410dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Orange.java
+package com.example.ass2_3listview;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+public class orange extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_orange);
+}
+}
+Yellow.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".yellow">
+<TextView
+android:id="@+id/textView3"
+android:layout_width="299dp"
+android:layout_height="50dp"
+android:text="YELLOW"
+android:textAlignment="center"
+android:textSize="24sp"
+tools:layout_editor_absoluteX="56dp"
+tools:layout_editor_absoluteY="454dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Yellow.java
+package com.example.ass2_3listview;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+public class yellow extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_yellow);
+}
+}
+Output:
+Onclick of yellow
+============================4============================
+Main_activity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity">
+<ListView
+android:layout_width="409dp"
+android:layout_height="729dp"
+android:id="@+id/listview"
+tools:layout_editor_absoluteX="1dp"
+tools:layout_editor_absoluteY="1dp"
+tools:ignore="MissingConstraints" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Main_activity.java
+package com.example.ass2_4sublists;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import java.util.ArrayList;
+import java.util.List;
+public class MainActivity extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+ListView listView=findViewById(R.id.listview);
+List<String> list=new ArrayList<>();
+list.add("Management");
+list.add("Ict");
+list.add("Art");
+ArrayAdapter arrayAdapter=new ArrayAdapter(getApplicationContext(),
+android.R.layout.simple_list_item_1,list);
+listView.setAdapter(arrayAdapter);
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+{
+@Override
+public void onItemClick(AdapterView<?> parent, View view, int
+position, long id) {
+if(position==0)
+{
+startActivity(new Intent(MainActivity.this,art.class));
+}
+if(position==1)
+{
+startActivity(new
+Intent(MainActivity.this,management.class));
+}
+if(position==2)
+{
+startActivity(new Intent(MainActivity.this,Ict2.class));
+}
+}
+});
+}
+}
+Departments:
+Management.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".management">
+<ListView
+android:layout_width="409dp"
+android:layout_height="729dp"
+android:id="@+id/listview"
+tools:layout_editor_absoluteX="1dp"
+tools:layout_editor_absoluteY="1dp"
+tools:ignore="MissingConstraints" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Management.java
+package com.example.ass2_4sublists;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import java.util.ArrayList;
+import java.util.List;
+public class management extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_management);
+ListView listView=findViewById(R.id.listview);
+List<String> list=new ArrayList<>();
+list.add("painting");
+list.add("poetry");
+ArrayAdapter arrayAdapter=new ArrayAdapter(getApplicationContext(),
+android.R.layout.simple_list_item_1,list);
+listView.setAdapter(arrayAdapter);
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+@Override
+public void onItemClick(AdapterView<?> parent, View view, int position,
+long id) {
+if(position==0)
+{
+startActivity(new Intent(management.this,market.class));
+}
+if(position==1)
+{
+startActivity(new Intent(management.this,finance.class));
+}
+}
+});
+}
+}
+Art.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".art">
+<ListView
+android:layout_width="409dp"
+android:layout_height="729dp"
+android:id="@+id/listview"
+tools:layout_editor_absoluteX="1dp"
+tools:layout_editor_absoluteY="1dp"
+tools:ignore="MissingConstraints" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Art.java
+package com.example.ass2_4sublists;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import java.util.ArrayList;
+import java.util.List;
+public class art extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_art);
+ListView listView=findViewById(R.id.listview);
+List<String> list=new ArrayList<>();
+list.add("painting");
+list.add("poetry");
+ArrayAdapter arrayAdapter=new ArrayAdapter(getApplicationContext(),
+android.R.layout.simple_list_item_1,list);
+listView.setAdapter(arrayAdapter);
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+@Override
+public void onItemClick(AdapterView<?> parent, View view, int
+position, long id) {
+if(position==0)
+{
+startActivity(new Intent(art.this,painting.class));
+}
+if(position==1)
+{
+startActivity(new Intent(art.this,poetry.class));
+}
+if(position==2)
+{
+startActivity(new Intent(art.this,music.class));
+}
+}
+});
+}
+}
+Ict.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".Ict2">
+<ListView
+android:layout_width="409dp"
+android:layout_height="729dp"
+android:id="@+id/listview"
+tools:layout_editor_absoluteX="1dp"
+tools:layout_editor_absoluteY="1dp"
+tools:ignore="MissingConstraints" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Ict.java
+package com.example.ass2_4sublists;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import java.util.ArrayList;
+import java.util.List;
+public class Ict2 extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_ict2);
+ListView listView=findViewById(R.id.listview);
+List<String> list=new ArrayList<>();
+list.add("painting");
+list.add("poetry");
+ArrayAdapter arrayAdapter=new ArrayAdapter(getApplicationContext(),
+android.R.layout.simple_list_item_1,list);
+listView.setAdapter(arrayAdapter);
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+@Override
+public void onItemClick(AdapterView<?> parent, View view, int
+position, long id) {
+if(position==0)
+{
+startActivity(new Intent(Ict2.this,ict.class));
+}
+if(position==1)
+{
+startActivity(new Intent(Ict2.this,it.class));
+}
+}
+});
+}
+}
+Create Activity of
+Finance,market,music,poetry,painting,ict,it
+Like mention finance below:
+Finance.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".finance">
+</androidx.constraintlayout.widget.ConstraintLayout>
+Finance.java
+package com.example.ass2_4sublists;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+public class finance extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_finance2);
+}
+}
+Output:
+Onclick of art
+On click of painting
+On click of poetry
+===========================5==========================
+Main_activity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity">
+<TextView
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="Hello World!"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintLeft_toLeftOf="parent"
+app:layout_constraintRight_toRightOf="parent"
+app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+Main_activity.java
+package com.example.ass2_5crudemployee;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+public class MainActivity extends AppCompatActivity {
+dbo obj=new dbo(this, null, null,1);
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+// obj.add_data("Radhika",21,"Female");
+// obj.add_data("Shruti",20,"Female");
+// obj.add_data("Samiha",21,"Female");
+obj.up_rec(1,"Maniya");
+obj.del_rec(3);
+obj.get_data();
+}
+}
+Dbo.java
+package com.example.ass2_5crudemployee;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import androidx.annotation.Nullable;
+public class dbo extends SQLiteOpenHelper {
+public dbo(@Nullable Context context, @Nullable String name, @Nullable
+SQLiteDatabase.CursorFactory factory, int version) {
+super(context, "employee", factory, 1);
+}
+@Override
+public void onCreate(SQLiteDatabase sqLiteDatabase) {
+sqLiteDatabase.execSQL("create table employeetb(eid integer primary key
+autoincrement, ename text,eage integer,egender text)");
+}
+@Override
+public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+sqLiteDatabase.execSQL("drop table if exists employeetb");
+onCreate(sqLiteDatabase);
+}
+public void add_data(String n, int ea, String eg)
+{
+SQLiteDatabase db=this.getWritableDatabase();
+ContentValues cv=new ContentValues();
+cv.put("ename", n);
+cv.put("eage", ea);
+cv.put("egender", eg);
+db.insert("employeetb", null, cv);
+db.close();
+}
+public void del_rec(Integer eid)
+{
+SQLiteDatabase db=this.getWritableDatabase();
+db.delete("employeetb", "eid = ?", new
+String[]{Integer.toString(eid)});
+db.close();
+}
+public void up_rec(Integer eid,String n)
+{
+SQLiteDatabase db=this.getWritableDatabase();
+ContentValues cv=new ContentValues();
+cv.put("ename",n );
+db.update("employeetb", cv, "eid = ?", new
+String[]{Integer.toString(eid)});
+db.close();
+}
+public Cursor get_data()
+{
+SQLiteDatabase db=this.getReadableDatabase();
+Cursor res=db.rawQuery("select * from employeetb",null);
+return res;
+}
+}
+Output:
+After updating Radhika to Maniya and
+Deleting 3rd record Samiha
