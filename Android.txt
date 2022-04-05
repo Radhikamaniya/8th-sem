@@ -1576,7 +1576,188 @@ app:layout_constraintTop_toBottomOf="@+id/btnchksubmit" />
 7) Develop an application for registration of student with five fields Name, Age,
 Address, City, and Phone using editetext. On submit button transfer these
 information and display on another activity
+------------------------------------------------------1st type--------------------------------------------------------
+Main_Activity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity">
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintEnd_toEndOf="parent"
+app:layout_constraintStart_toStartOf="parent"
+app:layout_constraintTop_toTopOf="parent">
+<EditText
+android:id="@+id/ed1"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="name:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed2"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="age:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed3"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="address:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed4"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="city:"
+android:inputType="textPersonName" />
+<EditText
+android:id="@+id/ed5"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:ems="10"
+android:hint="phone:"
+android:inputType="textPersonName" />
+<Button
+android:id="@+id/b1"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="submit" />
+</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
 
+Main_activity.java
+
+package com.example.ass2_1displayinformation;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+public class MainActivity extends AppCompatActivity {
+EditText edname,edage,edaddress,edcity,edphone;
+Button button;
+int age;
+int phone;
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+edname = findViewById(R.id.ed1);
+edage= findViewById(R.id.ed2);
+edaddress = findViewById(R.id.ed3);
+edcity= findViewById(R.id.ed4);
+edphone = findViewById(R.id.ed5);
+button = findViewById(R.id.b1);
+button.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View view) {
+age = Integer.parseInt(edage.getText().toString());
+phone = Integer.parseInt(edphone.getText().toString());
+Intent i = new
+Intent(getApplicationContext(),MainActivity2.class);
+i.putExtra("name",edname.getText().toString());
+i.putExtra("age",age);
+i.putExtra("address",edaddress.getText().toString());
+i.putExtra("city",edcity.getText().toString());
+i.putExtra("phone",phone);
+startActivity(i);
+}
+});
+}
+}
+
+MainActivity2.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".MainActivity2">
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintEnd_toEndOf="parent"
+app:layout_constraintStart_toStartOf="parent"
+app:layout_constraintTop_toTopOf="parent">
+<TextView
+android:id="@+id/tv1"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv2"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv3"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv4"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+<TextView
+android:id="@+id/tv5"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="" />
+</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+MainActivity2.java
+
+package com.example.ass2_1displayinformation;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.TextView;
+public class MainActivity2 extends AppCompatActivity {
+TextView tvname,tvage,tvaddress,tvcity,tvphone;
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main2);
+tvname = findViewById(R.id.tv1);
+tvage =findViewById(R.id.tv2);
+tvaddress =findViewById(R.id.tv3);
+tvcity=findViewById(R.id.tv4);
+tvphone =findViewById(R.id.tv5);
+Intent i = getIntent();
+int ph;
+int ag =i.getIntExtra("age",0);
+ph=i.getIntExtra("phone",0);
+tvname.setText(i.getStringExtra("name"));
+tvage.setText("age is"+ag);
+// Toast.makeText(this, "age is"+ag, Toast.LENGTH_SHORT).show();
+// Toast.makeText(this, "phone is"+ph, Toast.LENGTH_SHORT).show();
+tvaddress.setText(i.getStringExtra("address"));
+tvcity.setText(i.getStringExtra("city"));
+tvphone.setText("phone is"+ph);
+}
+}
+
+------------------------------------------------------2nd type---------------------------------------------------------
 —-activity7.java—-
 
 package com.example.assignment1_app;
@@ -3045,4 +3226,417 @@ employee_info",null);
 return res;
 }
 }
-Output:
+
+
+
+============================================================CLASSCODE=================================================================
+MEnu And Auto omplete text view
+--------------------------
+package com.example.menu_demo;
+import androidx.appcompat.app.AppCompatActivity;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.PopupMenu;
+import android.widget.Toast;
+public class MainActivity extends AppCompatActivity {
+ Button btn;
+ AutoCompleteTextView actv;
+ String[] fruits={"Apple", "Mango", "Banana", "Graps",
+"Orange", "Guava","Abc","bca"};
+ @Override
+ protected void onCreate(Bundle savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ actv=findViewById(R.id.act);
+ ArrayAdapter<String> adp=new ArrayAdapter<String>(this,
+R.layout.support_simple_spinner_dropdown_item, fruits);
+ actv.setThreshold(1);
+ actv.setTextColor(Color.RED);
+ actv.setAdapter(adp);
+ actv.showDropDown();
+ btn=findViewById(R.id.b1);
+ registerForContextMenu(btn);
+ btn.setOnClickListener(new View.OnClickListener() {
+ @Override
+ public void onClick(View view) {
+ PopupMenu p=new PopupMenu(MainActivity.this,
+btn);
+ p.getMenuInflater().inflate(R.menu.mymenu,
+p.getMenu());
+ p.setOnMenuItemClickListener(new
+PopupMenu.OnMenuItemClickListener() {
+ @Override
+ public boolean onMenuItemClick(MenuItem
+menuItem) {
+ //Toast.makeText(this, "You
+Selected"+ menuItem.getTitle(), Toast.LENGTH_LONG).show();
+
+Toast.makeText(getApplicationContext(), "You Selected
+"+menuItem.getTitle(), Toast.LENGTH_LONG).show();
+ return false;
+ }
+ });
+ p.show();
+ }
+ });
+ }
+ public void onCreateContextMenu(ContextMenu contextMenu,
+View view, ContextMenu.ContextMenuInfo contextMenuInfo)
+ {
+ getMenuInflater().inflate(R.menu.mymenu, contextMenu);
+ //return true;
+ }
+ public boolean onContextItemSelected(MenuItem item)
+ {
+ if(item.getItemId()==R.id.i1)
+ {
+ Toast.makeText(this, "You Selected"+
+item.getTitle(), Toast.LENGTH_LONG).show();
+ }
+ else if(item.getItemId()==R.id.i2)
+ {
+ Toast.makeText(this, "You Selected"+
+item.getTitle(), Toast.LENGTH_LONG).show();
+ }
+ else if(item.getItemId()==R.id.i3)
+ {
+ Toast.makeText(this, "You Selected"+
+item.getTitle(), Toast.LENGTH_LONG).show();
+ }
+ return true;
+ }
+ public boolean onCreateOptionsMenu(Menu menu)
+ {
+ getMenuInflater().inflate(R.menu.mymenu, menu);
+ return true;
+ }
+ public boolean onOptionsItemSelected(MenuItem item)
+ {
+ /*Toast.makeText(this,"You selected "+ item.getTitle(),
+Toast.LENGTH_SHORT).show();
+ return true;*/
+ int id=item.getItemId();
+ switch (id){
+ case R.id.i1:
+ Toast.makeText(this, "You Selected Item1",
+Toast.LENGTH_LONG).show();
+ return true;
+ case R.id.i2:
+ Toast.makeText(this, "You Selected Item2",
+Toast.LENGTH_LONG).show();
+ return true;
+ case R.id.i3:
+ Toast.makeText(this, "You Selected Item3",
+Toast.LENGTH_LONG).show();
+ return true;
+ }
+ return true;
+ }
+}
+-----------------------------------------------------------------------------------------------------------------------------------------
+mymenu.xml file
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+xmlns:android="http://schemas.android.com/apk/res/android">
+ <item android:id="@+id/i1"
+ android:title="Item1">
+ </item>
+ <item android:id="@+id/i2"
+ android:title="Item2">
+ </item>
+ <item android:id="@+id/i3"
+ android:title="Item3">
+ </item>
+</menu>
+===================================================================================================
+Sharedpreference_code
+------------------------------------------------
+package com.example.sp_demo;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+public class MainActivity extends AppCompatActivity {
+ EditText fn, ln;
+ Button btn;
+ @Override
+ protected void onCreate(Bundle savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ fn=findViewById(R.id.e1);
+ ln=findViewById(R.id.e2);
+ btn=findViewById(R.id.b1);
+ SharedPreferences spf2=getSharedPreferences("mypref",
+MODE_PRIVATE);
+ if(spf2.contains("fname"))
+ {
+ fn.setText(spf2.getString("fname", ""));
+ }
+ if (spf2.contains("lname"))
+ {
+ ln.setText(spf2.getString("lname", ""));
+ }
+ btn.setOnClickListener(new View.OnClickListener() {
+ @Override
+ public void onClick(View view) {
+ SharedPreferences
+spf=getSharedPreferences("mypref", MODE_PRIVATE);
+ SharedPreferences.Editor edit=spf.edit();
+ edit.putString("fname",
+fn.getText().toString());
+ edit.putString("lname",
+ln.getText().toString());
+ edit.apply();
+ }
+ });
+ }
+}
+
+
+----------------------------------------------------GeocodeAndProviderCode-------------------------------------------------------
+package com.example.geocode_demo;
+import androidx.appcompat.app.AppCompatActivity;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import java.io.IOException;
+import java.util.List;
+public class MainActivity extends AppCompatActivity {
+ public static final String
+TAG=MainActivity.class.getCanonicalName();
+ Button geo, rgeo, prov;
+ Geocoder geocoder;
+ LocationManager manager;
+ @Override
+ protected void onCreate(Bundle savedInstanceState) {
+ super.onCreate( savedInstanceState );
+ setContentView( R.layout.activity_main );
+ geo=findViewById( R.id.b1 );
+ rgeo=findViewById( R.id.b2 );
+ prov=findViewById( R.id.b3 );
+ manager=(LocationManager) getSystemService(
+LOCATION_SERVICE );
+ prov.setOnClickListener( new View.OnClickListener() {
+ @Override
+ public void onClick(View view) {
+ List<String> providers= manager.getAllProviders();
+ for (String provider : providers) {
+ Log.i( TAG,"Provider =" + provider);
+ }
+ Criteria criteria=new Criteria();
+ criteria.setAccuracy( Criteria.ACCURACY_FINE );
+ criteria.setAltitudeRequired( true );
+ criteria.setCostAllowed( true );
+ criteria.setSpeedRequired( true );
+ String str=manager.getBestProvider( criteria,
+false);
+ Log.i( TAG, "Best Provider = " + str );
+ }
+ } );
+ geocoder=new Geocoder( this );
+ rgeo.setOnClickListener( new View.OnClickListener() {
+ @Override
+ public void onClick(View view) {
+ try {
+ List<Address>
+addresses=geocoder.getFromLocationName( "VNSGU, Surat", 2 );
+ for (Address address : addresses) {
+ Log.i( TAG, "Latitude value = " +
+address.getLatitude());
+ Log.i( TAG, "Longitude valu =
+"+address.getLongitude() );
+ }
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ }
+ } );
+ geo.setOnClickListener( new View.OnClickListener() {
+ @Override
+ public void onClick(View view) {
+ try {
+ List<Address> addresses=
+geocoder.getFromLocation( 21.1702, 72.8311,5);
+ for (Address address : addresses) {
+ Log.i( TAG, "Country Name = "+
+address.getCountryName() );
+ Log.i( TAG, "Country Code = "+
+address.getCountryCode());
+ Log.i( TAG, "Country City = "+
+address.getAdminArea() );
+ Log.i( TAG, "street = "+
+address.getSubAdminArea() );
+ }
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ }
+ } );
+ }
+}
+Manifest File
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+xmlns:android="http://schemas.android.com/apk/res/android"
+ package="com.example.geocode_demo">
+ <uses-permission
+android:name="android.permission.INTERNET"/>
+ <uses-permission
+android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+ <uses-permission
+android:name="android.permission.ACCESS_FINE_LOCATION"/>
+ <application
+ android:allowBackup="true"
+ android:icon="@mipmap/ic_launcher"
+ android:label="@string/app_name"
+ android:roundIcon="@mipmap/ic_launcher_round"
+ android:supportsRtl="true"
+ android:theme="@style/Theme.Emp">
+ <activity android:name=".MainActivity">
+ <intent-filter>
+ <action
+android:name="android.intent.action.MAIN" />
+ <category
+android:name="android.intent.category.LAUNCHER" />
+ </intent-filter>
+ </activity>
+ </application>
+</manifest>
+
+
+=========================================================
+menu
+
+https://www.javatpoint.com/android-option-menu-example
+-----------------------------
+activity_main.xml
+We have only one textview in this file.
+
+File: activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>  
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"  
+    xmlns:app="http://schemas.android.com/apk/res-auto"  
+    xmlns:tools="http://schemas.android.com/tools"  
+    android:layout_width="match_parent"  
+    android:layout_height="match_parent"  
+    tools:context="example.javatpoint.com.optionmenu.MainActivity">  
+  
+    <android.support.design.widget.AppBarLayout  
+        android:layout_width="match_parent"  
+        android:layout_height="wrap_content"  
+        android:theme="@style/AppTheme.AppBarOverlay">  
+  
+        <android.support.v7.widget.Toolbar  
+            android:id="@+id/toolbar"  
+            android:layout_width="match_parent"  
+            android:layout_height="?attr/actionBarSize"  
+            android:background="?attr/colorPrimary"  
+            app:popupTheme="@style/AppTheme.PopupOverlay" />  
+  
+    </android.support.design.widget.AppBarLayout>  
+  
+    <include layout="@layout/content_main" />  
+  
+</android.support.design.widget.CoordinatorLayout>  
+File: context_main.xml
+<?xml version="1.0" encoding="utf-8"?>  
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"  
+    xmlns:app="http://schemas.android.com/apk/res-auto"  
+    xmlns:tools="http://schemas.android.com/tools"  
+    android:layout_width="match_parent"  
+    android:layout_height="match_parent"  
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"  
+    tools:context="example.javatpoint.com.optionmenu.MainActivity"  
+    tools:showIn="@layout/activity_main">  
+  
+    <TextView  
+        android:layout_width="wrap_content"  
+        android:layout_height="wrap_content"  
+        android:text="Hello World!"  
+        app:layout_constraintBottom_toBottomOf="parent"  
+        app:layout_constraintLeft_toLeftOf="parent"  
+        app:layout_constraintRight_toRightOf="parent"  
+        app:layout_constraintTop_toTopOf="parent" />  
+  
+</android.support.constraint.ConstraintLayout>  
+menu_main.xml
+It contains three items as show below. It is created automatically inside the res/menu directory.
+
+File: menu_main.xml
+<menu xmlns:android="http://schemas.android.com/apk/res/android"  
+    xmlns:app="http://schemas.android.com/apk/res-auto"  
+    xmlns:tools="http://schemas.android.com/tools"  
+    tools:context="example.javatpoint.com.optionmenu.MainActivity">  
+  
+    <item  android:id="@+id/item1"  
+        android:title="Item 1"/>  
+    <item  android:id="@+id/item2"  
+        android:title="Item 2"/>  
+    <item  android:id="@+id/item3"  
+        android:title="Item 3"  
+        app:showAsAction="withText"/>  
+</menu>  
+
+ 
+Activity class
+This class displays the content of menu.xml file and performs event handling on clicking the menu items.
+
+File: MainActivity.java
+package example.javatpoint.com.optionmenu;  
+  
+import android.os.Bundle;  
+import android.support.v7.app.AppCompatActivity;  
+import android.support.v7.widget.Toolbar;  
+import android.view.Menu;  
+import android.view.MenuItem;  
+import android.widget.Toast;  
+  
+public class MainActivity extends AppCompatActivity {  
+  
+    @Override  
+    protected void onCreate(Bundle savedInstanceState) {  
+        super.onCreate(savedInstanceState);  
+        setContentView(R.layout.activity_main);  
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);  
+        setSupportActionBar(toolbar);  
+    }  
+  
+    @Override  
+    public boolean onCreateOptionsMenu(Menu menu) {  
+        // Inflate the menu; this adds items to the action bar if it is present.  
+        getMenuInflater().inflate(R.menu.menu_main, menu);  
+        return true;  
+    }  
+  
+    @Override  
+    public boolean onOptionsItemSelected(MenuItem item) {  
+       int id = item.getItemId();  
+        switch (id){  
+            case R.id.item1:  
+                Toast.makeText(getApplicationContext(),"Item 1 Selected",Toast.LENGTH_LONG).show();  
+                return true;  
+            case R.id.item2:  
+                Toast.makeText(getApplicationContext(),"Item 2 Selected",Toast.LENGTH_LONG).show();  
+                return true;  
+            case R.id.item3:  
+                Toast.makeText(getApplicationContext(),"Item 3 Selected",Toast.LENGTH_LONG).show();  
+                return true;  
+            default:  
+                return super.onOptionsItemSelected(item);  
+        }  
+    }  
+}  
