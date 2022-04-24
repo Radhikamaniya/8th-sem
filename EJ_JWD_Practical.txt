@@ -14,11 +14,1127 @@
   com.mysql.jdbc.Driver
   port
   3306
+===============================================
+empfinalmix,jsf_kruti = ejbempdb
+jsf_jpa_rest_ejb = externaldb
+jsf_multipletablecrud = clgsir
+=====================================COMPLETE JSF CRUD WITH SEARCH,rest,jpa,ejb==============================
+1.new-other-context and dependency inject...-beans.xml(CDI confi.. file) and discovery="annoted" ni jagya e "all"
+       bean-discovery-mode="all">
+2.
+
+ <persistence-unit name="EmpFinalMixPU" transaction-type="JTA">
+    <jta-data-source>jdbc/mscit</jta-data-source>
+  
+    <properties/>
+
+
+3.session bean
+----------------
+localbean
+--------------------------------------
+ //Department
+    void addDepartment(String deptName);
+    void updateDepartment(Integer deptId, String deptName);
+    void deleteDepartment(Integer deptId);
+    Collection<Department> getAllDepartments();
+    
+    
+    //Employee
+    void addEmployee(String fname, String lname, int age, int salary, Integer deptId);
+    void updateEmployee(Integer empId, String fname, String lname, int age, int salary, Integer deptId);
+    void deleteEmployee(Integer empId);
+    Collection<Employee> getAllEmployees();
+    
+    //Project
+    void addProject(String projectName, int cost, String startDate);
+    void updateProject(Integer projectId,String projectName, int cost, String startDate);
+    void deleteProject(Integer projectId);
+    Collection<Project> getAllProjects();
+    
+    void addEmployeesToProject(Integer projectId,Collection<Integer> empIds);
+    void removeEmployeesToProject(Integer projectId,Collection<Integer> empIds);
+    
+    //Searching methods
+    
+    Collection<Project> getEmpProjects(Integer EmpId);
+    Collection<Employee> getProjectEmps(Integer ProjectId);
+    Collection<Employee> getEmpByDeptName(String deptName);
+    Collection<Employee> getEmpByDeptNames(Collection<String> deptNames);
+    Collection<Employee> getEmpByDeptAndSalary(String deptName,int salary);
+    Collection<Employee> getEmpBySalary(int salary);
+    Collection<Employee> getEmpByDeptId(Integer deptId);
+    Collection<Project> getProjectByName(String projectName);
+    Collection<Project> getProjectWithinCostRange(int startCost,int endCost);
+    ---------------------------------------------------
+
+bean code
+--------------
+ @PersistenceContext(unitName="EmpFinalMixPU")
+    EntityManager em;
+
+    @Override
+    public void addDepartment(String deptName) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Department d=new Department(deptName);
+        em.persist(d);
+    
+    }
+
+    @Override
+    public void updateDepartment(Integer deptId, String deptName) {
+        
+        Department d=(Department) em.find(Department.class,deptId);
+        d.setDeptName(deptName);
+        em.merge(d);
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void deleteDepartment(Integer deptId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Department d=(Department) em.find(Department.class,deptId);
+        em.remove(d);
+    }
+
+    @Override
+    public Collection<Department> getAllDepartments() {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        return em.createNamedQuery("Department.findAll").getResultList();
+    }
+
+    @Override
+    public void addEmployee(String fname, String lname, int age, int salary, Integer deptId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Employee e=new Employee(fname,lname,age,salary);
+        Department d=(Department) em.find(Department.class,deptId);
+        e.setDept(d);
+        
+        
+        Collection<Employee> empCol=d.getEmployeeCollection();
+        empCol.add(e);
+        d.setEmployeeCollection(empCol);
+        
+        em.persist(e);
+        em.merge(d);
+    }
+    
+
+    @Override
+    public void updateEmployee(Integer empId, String fname, String lname, int age, int salary, Integer deptId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Employee e=(Employee) em.find(Employee.class,empId);
+        
+        Integer oldDept=e.getDept().getDeptId();
+        
+        e.setFname(fname);
+        e.setLname(lname);
+        e.setAge(age);
+        e.setSalary(salary);
+        
+        Department d=(Department) em.find(Department.class,deptId);
+        e.setDept(d);
+        
+        
+        Collection<Employee> eCol;
+        Collection<Employee> oeCol;
+        if(oldDept!=d.getDeptId()){
+            eCol=d.getEmployeeCollection();
+            eCol.add(e);
+            d.setEmployeeCollection(eCol);
+            
+            Department od=(Department) em.find(Department.class,oldDept);
+            oeCol=od.getEmployeeCollection();
+            oeCol.remove(e);
+            od.setEmployeeCollection(oeCol);
+            em.merge(od);
+        }
+        
+        em.merge(e);
+        em.merge(d);
+    }
+
+    @Override
+    public void deleteEmployee(Integer empId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Employee e=(Employee) em.find(Employee.class, empId);
+        Department d=e.getDept();
+        
+        
+        
+        Collection eCol=d.getEmployeeCollection();
+        eCol.remove(e);
+        d.setEmployeeCollection(eCol);
+        
+        em.remove(e);
+        em.merge(d);
+    
+    }
+
+    @Override
+    public Collection<Employee> getAllEmployees() {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        return em.createNamedQuery("Employee.findAll").getResultList();
+    }
+
+    @Override
+    public void addProject(String projectName, int cost, String startDate) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Project p=new Project(projectName,cost,startDate);
+        em.persist(p);
+    }
+
+    @Override
+    public void updateProject(Integer projectId, String projectName, int cost, String startDate) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Project p=(Project) em.find(Project.class,projectId);
+        p.setProjectName(projectName);
+        p.setCost(cost);
+        p.setStartDate(startDate);
+        em.merge(p);
+    }
+
+    @Override
+    public void deleteProject(Integer projectId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Project p=(Project) em.find(Project.class,projectId);
+        em.remove(p);
+    }
+
+    @Override
+    public Collection<Project> getAllProjects() {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        return em.createNamedQuery("Project.findAll").getResultList();
+    }
+
+    @Override
+    public void addEmployeesToProject(Integer projectId, Collection<Integer> empIds) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Project p=(Project) em.find(Project.class, projectId);
+        
+        //Check if employee already added ?
+        
+        Collection<Employee> eCol=p.getEmployeeCollection();
+        
+        for(Integer eId:empIds){
+            
+            Employee e=(Employee) em.find(Employee.class,eId);
+            if(!eCol.contains(e)){
+                
+               
+                eCol.add(e);
+                p.setEmployeeCollection(eCol);
+                
+                Collection<Project> pCol=e.getProjectCollection();
+                pCol.add(p);
+                e.setProjectCollection(pCol);
+                em.merge(p);
+                
+            }
+        }
+        
+    }
+
+    @Override
+    public void removeEmployeesToProject(Integer projectId, Collection<Integer> empIds) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Project p=(Project) em.find(Project.class, projectId);
+        
+        //Check if employee already added ?
+        
+        Collection<Employee> eCol=p.getEmployeeCollection();
+        for(Integer eId:empIds){
+            
+            Employee e=(Employee) em.find(Employee.class,eId);
+            if(eCol.contains(e)){
+                
+                eCol.remove(e);
+                p.setEmployeeCollection(eCol);
+                
+                Collection<Project> pCol=e.getProjectCollection();
+                pCol.remove(p);
+                e.setProjectCollection(pCol);
+                em.merge(p);    //IMPORTANT
+                
+            }
+        }
+    
+    }
+
+    @Override
+    public Collection<Project> getEmpProjects(Integer EmpId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Employee e=(Employee) em.find(Employee.class, EmpId);
+        return e.getProjectCollection();
+    }
+
+    @Override
+    public Collection<Employee> getProjectEmps(Integer ProjectId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Project p=(Project) em.find(Project.class, ProjectId);
+        return p.getEmployeeCollection();
+    }
+
+    @Override
+    public Collection<Employee> getEmpByDeptName(String deptName) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Collection<Department> depts=em.createNamedQuery("Department.findByDeptName")
+                .setParameter("deptName", deptName)
+                .getResultList();
+        
+        Collection<Employee> emps=new ArrayList<Employee>();
+        
+        for(Department d:depts){
+            emps.addAll(d.getEmployeeCollection());
+        }
+        return emps;
+    }
+    
+    @Override
+    public Collection<Employee> getEmpByDeptNames(Collection<String> deptNames) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        
+        Collection<Department> depts=em.createNamedQuery("Department.findByDeptNames")
+                .setParameter("deptNames", deptNames)
+                .getResultList();
+        
+        Collection<Employee> emps=new ArrayList<Employee>();
+        
+        for(Department d:depts){
+            emps.addAll(d.getEmployeeCollection());
+        }
+        return emps;
+    }
+
+    @Override
+    public Collection<Employee> getEmpByDeptAndSalary(String deptName, int salary) {
+        Collection<Department> depts=em.createNamedQuery("Department.findByDeptName")
+                .setParameter("deptName", deptName)
+                .getResultList();
+        
+        Collection<Employee> emps=new ArrayList<Employee>();
+        Collection<Employee> empsFinal=new ArrayList<Employee>();
+        
+        for(Department d:depts){
+            emps.addAll(d.getEmployeeCollection());
+        }
+        
+        for(Employee e:emps){
+            if(e.getSalary()>=salary){
+                empsFinal.add(e);
+            }
+        }
+        
+        return empsFinal;
+    }
+
+    @Override
+    public Collection<Employee> getEmpBySalary(int salary) {
+        return em.createNamedQuery("Employee.findBySalary").setParameter("salary", salary).getResultList();
+    }
+
+    @Override
+    public Collection<Employee> getEmpByDeptId(Integer deptId) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Department d=(Department) em.find(Department.class, deptId);
+        return d.getEmployeeCollection();
+    }
+
+    @Override
+    public Collection<Project> getProjectByName(String projectName) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        Collection<Project> pCol=em.createNamedQuery("Project.findByProjectName")
+                .setParameter("projectName", projectName)
+                .getResultList();
+        
+        return pCol;
+    }
+
+    @Override
+    public Collection<Project> getProjectWithinCostRange(int startCost, int endCost) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
+        
+        Collection<Project> pCol=em.createNamedQuery("Project.findByCostRange")
+                .setParameter("startRange", startCost)
+                .setParameter("endRange",endCost)
+                .getResultList();
+        
+        return pCol;
+    }
+-----------------------------------------------------------
+entity
+-----------------
+    @NamedQuery(name = "Department.findByDeptNames", query = "SELECT d FROM Department d WHERE d.deptName IN :deptNames")})
+----------------------------------------------------
+REST
+-----------------------------------
+
+    @EJB EmpBeanLocal ebl;
+
+    @Path("getAllEmployees")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Employee> getAllEmployees() {
+        return ebl.getAllEmployees();
+    }
+   
+    
+    @Path("getEmpByDeptNames")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Employee> getEmpByDeptNames(Collection<String> deptNames) {
+        
+        
+        return ebl.getEmpByDeptNames(deptNames);
+    }
+--------------------------------------
+create client
+-----------------------------------
+Managedbean(their is two manage bean 1.RestEmployeeBean 2.EmployeeBean)
+------------
+@EJB EmpBeanLocal empBean;
+    EmpClient ec;
+    Response res;
+
+    Employee emp=new Employee();
+    Department dept=new Department();
+    
+    private Integer empId;
+    
+    private String fname;
+    private String lname;
+    
+    //@Size(max=2, message = "Age must contain 2 digit number")  
+    @Min(18)
+    private int age;
+    private int salary;
+    private Integer deptId;
+    
+    //private Department dept;
+    private Collection<Department> departments;
+    private Collection<Project> projectCollection;
+    private Collection<String> deptNms;
+    private GenericType<Collection<Employee>> gEmps;
+    private String deptName;
+    
+    public RestEmployeeBean() {
+    }
+
+    @PostConstruct          //IMPORTANT
+    public void init(){
+        ec=new EmpClient();
+        this.departments=empBean.getAllDepartments();
+        
+        this.deptNms=new ArrayList<String>();
+        this.deptName="";
+        gEmps=new GenericType<Collection<Employee>>(){};
+    }
+
+    public String getDeptName() {
+        return deptName;
+    }
+
+    public void setDeptName(String deptName) {
+        this.deptName = deptName;
+    }
+
+    public Collection<String> getDeptNms() {
+        return deptNms;
+    }
+
+    public void setDeptNms(Collection<String> deptNms) {
+        this.deptNms = deptNms;
+    }
+
+    
+    public Integer getEmpId() {
+        return empId;
+    }
+
+    public void setEmpId(Integer empId) {
+        this.empId = empId;
+    }
+
+    public String getFname() {
+        return fname;
+    }
+
+    public void setFname(String fname) {
+        this.fname = fname;
+    }
+
+    public String getLname() {
+        return lname;
+    }
+
+    public void setLname(String lname) {
+        this.lname = lname;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public int getSalary() {
+        return salary;
+    }
+
+    public void setSalary(int salary) {
+        this.salary = salary;
+    }
+
+    public Integer getDeptId() {
+        return deptId;
+    }
+
+    public void setDeptId(Integer deptId) {
+        this.deptId = deptId;
+    }
+
+    public Collection<Project> getProjectCollection() {
+        return projectCollection;
+    }
+
+    public void setProjectCollection(Collection<Project> projectCollection) {
+        this.projectCollection = projectCollection;
+    }
+
+    public Department getDept() {
+        return dept;
+    }
+
+    public void setDept(Department dept) {
+        this.dept = dept;
+    }
+    
+    public List<Employee> findAll(){
+        
+        if(deptNms.isEmpty()){
+            res=ec.getAllEmployees(Response.class);
+            return (List<Employee>) res.readEntity(gEmps);
+            //return (List<Employee>) this.empBean.getAllEmployees();
+        }else{
+            res=ec.getEmpByDeptNames(deptNms,Response.class);
+            return (List<Employee>) res.readEntity(gEmps);
+            //return (List<Employee>) this.empBean.getEmpByDeptNames(deptNms);
+        }
+    
+    }
+    
+    public List<Employee> filterEmpList(){
+        System.out.println(deptName);
+        
+        if((deptName=="" && salary==0) || (deptName.equals("All")&& salary==0)){
+            
+            return (List<Employee>) this.empBean.getAllEmployees();
+        }else if(deptName.equals("All")&& salary!=0){
+            
+            return (List<Employee>) this.empBean.getEmpBySalary(salary);
+        }else{
+            return (List<Employee>) this.empBean.getEmpByDeptAndSalary(deptName,salary);
+        }
+    }
+    
+    public String addEmployee(){
+        
+        empBean.addEmployee(fname, lname, age, salary, deptId);
+        
+        return "display";
+    }
+    
+    public String edit(Employee e){
+        this.emp=e;
+        this.empId=e.getEmpId();
+        this.dept=e.getDept();
+        this.fname=e.getFname();
+        this.lname=e.getLname();
+        this.age=e.getAge();
+        this.salary=e.getSalary();
+        this.deptId=e.getDept().getDeptId();
+        
+        return "Edit";
+    }
+
+    public Collection<Department> getDepartments() {
+        return departments;
+    }
+
+    public void setDepartments(Collection<Department> departments) {
+        this.departments = departments;
+    }
+    
+    
+    
+    public String edit(){
+        
+        empBean.updateEmployee(empId, fname, lname, age, salary, deptId);
+        this.emp=null;
+        this.empId=0;
+        this.dept=null;
+        this.fname="";
+        this.lname="";
+        this.age=0;
+        this.salary=0;
+        this.deptId=0;
+        return "display";
+    }
+    
+    public void deleteEmp(Integer id){
+        empBean.deleteEmployee(id);
+    }
+    
+-----------------------------------------
+JSF
+-------------------------------------------------------------------------------------------------
+display.xhtml
+-----------
+<center>
+            <h:form>
+                <br/>
+                <h:link value="Add Employee" outcome="Insert"></h:link>
+                
+                <br/><br/>
+                
+                <h:selectManyCheckbox id="deptSel" value="#{employeeBean.deptNms}">
+                    <f:ajax event="click" execute="deptSel" render="tb1" />
+                    <f:selectItems value="#{employeeBean.departments}" var="d" itemValue="#{d.deptName}" itemLabel="#{d.deptName}">
+                        
+                    </f:selectItems>
+                </h:selectManyCheckbox>
+                
+                <br/><br/>
+        <h:dataTable id="tb1" var="e" value="#{employeeBean.findAll()}" border="1" cellpadding="1" width="500" cellspacing="1">
+            <h:column>
+                <f:facet name="header">Name</f:facet>
+                <h:outputText value="#{e.fname} #{e.lname}"></h:outputText>
+            </h:column>
+            
+            <h:column>
+                <f:facet name="header">Age</f:facet>
+                <h:outputText value="#{e.age}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Salary</f:facet>
+                <h:outputText value="#{e.salary}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Department</f:facet>
+                <h:outputText value="#{e.dept.deptName}"></h:outputText>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Edit</f:facet>
+                <h:commandLink value="Edit" action="#{employeeBean.edit(e)}"></h:commandLink>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Delete</f:facet>
+                <h:commandLink value="Delete" action="#{employeeBean.deleteEmp(e.empId)}" onclick="return confirm('Are you sure?')"></h:commandLink>
+            </h:column>
+        </h:dataTable>
+            </h:form>
+        </center>
+-------------------------------------------------------------------------------------------------
+search.xhtml
+-----------------------------------------
+<h:form>
+            <center>
+                <h1>Search Employee Form</h1>
+                
+                <h:outputLabel value="Department :  " for="deptName" />
+                
+                <h:selectOneMenu id="deptName" value="#{employeeBean.deptName}">
+                    <f:selectItem itemValue="All" itemLabel="All"></f:selectItem>
+                    <f:selectItems var="d" value="#{employeeBean.departments}" itemValue="#{d.deptName}" itemLabel="#{d.deptName}">
+                        
+                    </f:selectItems>
+                </h:selectOneMenu>
+    
+                <br/><br/>
+                <h:outputLabel value="Minimum range for salary : " for="sal"/>
+                <h:inputText value="#{employeeBean.salary}" />
+                
+                <br/><br/>
+                <h:commandButton id="b1" value="Search" action="#{employeeBean.filterEmpList()}">
+<!--                    <f:ajax event="click" execute="deptName" render="tb1" />-->
+                </h:commandButton>
+                
+                <br/><br/>
+                <h:dataTable id="tb1" var="e" border="2" value="#{employeeBean.filterEmpList()}" cellpadding="2" cellspacing="2" width="600">
+                    <h:column>
+                        <f:facet name="header">Name</f:facet>
+                        <h:outputText value="#{e.fname} #{e.lname}"/>
+                    </h:column>
+                    
+                    <h:column>
+                        <f:facet name="header">Age</f:facet>
+                        <h:outputText value="#{e.age}"/>
+                    </h:column>
+                    
+                    <h:column>
+                        <f:facet name="header">Salary</f:facet>
+                        <h:outputText value="#{e.salary}"/>
+                    </h:column>
+                    
+                    <h:column>
+                        <f:facet name="header">Department</f:facet>
+                        <h:outputText value="#{e.dept.deptName}"/>
+                    </h:column>
+                </h:dataTable>
+            </center>
+        </h:form>
+------------------------------------------------------------------------
+insert.xhtml
+----------------------------
+<h:form>
+            <h1><h:outputText value="Add Employee" /></h1>
+<!--            <h:panelGrid >-->
+                <h:outputLabel value="First Name" for="fname"/>
+                <h:inputText id="fname" value="#{employeeBean.fname}" required="true" requiredMessage="First name should not be empty!" />
+                <h:message for="fname" style=" color: red"/>  
+            <br/>
+                <h:outputLabel value="Last Name" for="lname"/>
+                <h:inputText id="lname" value="#{employeeBean.lname}" required="true" requiredMessage="Last name should not be empty!" />
+                <h:message for="lname" style=" color: red"/>  
+            <br/>
+                <h:outputLabel value="Age" for="age"/>
+                <h:inputText id="age" value="#{employeeBean.age}" required="true" requiredMessage="Age should not be empty!" />
+                <h:message for="age" style=" color: red"/>  
+            <br/>  
+                <h:outputLabel value="Salary" for="salary"/>
+                <h:inputText id="salary" value="#{employeeBean.salary}" required="true" requiredMessage="Salary should not be empty!" />
+            <br/>
+                <h:outputLabel value="Department" for="deptId"/>
+                <h:selectOneMenu id="deptId" value="#{employeeBean.deptId}">
+                    <f:selectItems value="#{employeeBean.departments}" var="d" itemValue="#{d.deptId}" itemLabel="#{d.deptName}">
+                        
+                    </f:selectItems>
+                </h:selectOneMenu>
+             <br/>   
+                <h:commandButton action="#{employeeBean.addEmployee()}" value="ADD" />
+            <!--</h:panelGrid>-->
+        </h:form>
+----------------------------------------------------------
+edit.xhtml
+----------------------------
+<h:form>
+            <h1><h:outputText value="Edit Employee" /></h1>
+            <h:inputHidden value="#{employeeBean.empId}" />
+            <h:panelGrid columns="2">
+                
+                <h:outputLabel value="First Name" for="fname"/>
+                <h:inputText id="fname" value="#{employeeBean.fname}" required="true" requiredMessage="First name should not be empty!" />
+            
+                <h:outputLabel value="Last Name" for="lname"/>
+                <h:inputText id="lname" value="#{employeeBean.lname}" required="true" requiredMessage="Last name should not be empty!" />
+            
+                <h:outputLabel value="Age" for="age"/>
+                <h:inputText id="age" value="#{employeeBean.age}" required="true" requiredMessage="Age should not be empty!" />
+            
+                
+                <h:outputLabel value="Salary" for="salary"/>
+                <h:inputText id="salary" value="#{employeeBean.salary}" required="true" requiredMessage="Salary should not be empty!" />
+            
+                <h:outputLabel value="Department" for="deptId"/>
+                <h:selectOneMenu id="deptId" value="#{employeeBean.deptId}">
+                    <f:selectItems value="#{employeeBean.departments}" var="d" itemValue="#{d.deptId}" itemLabel="#{d.deptName}">
+                        
+                    </f:selectItems>
+                </h:selectOneMenu>
+                
+                <h:commandButton action="#{employeeBean.edit()}" value="SAVE" />
+            </h:panelGrid>
+        </h:form>
+
+
+
+
+
+
+
+
+===================================2 table crud with REST,JSF=========================================
+beanlocal
+--------------------------------------------------------------------------
+ Collection<Category> getAllCategory();
+    Collection<Product> getAllproduct();
+     void addProduct(Integer cid,String pname,String brandname);
+     void updateProduct(Integer pid,Integer cid,String pname,String brandname);
+     void removeProduct(Integer pid,Integer cid);
+------------------------------------------------------------------------------
+bean
+------------------------------
+ EntityManager em;
+   
+    @Override
+    public Collection<Product> getAllproduct() {
+                  return em.createNamedQuery("Product.findAll").getResultList();
+
+    }
+
+    @Override
+    public void addProduct(Integer cid, String pname, String brandname) {
+    Category c = em.find(Category.class, cid);
+    Collection<Product> products = c.getProductCollection();
+    Product product = new Product();
+    product.setPname(pname);
+    product.setCid(c);
+    product.setBrandname(brandname);
+    products.add(product);
+    c.setProductCollection(products);
+    em.persist(product);
+    em.merge(c);   
+    }
+
+    @Override
+    public void updateProduct(Integer pid, Integer cid, String pname, String brandname) {
+ Product p=em.find(Product.class,pid);
+         Category c = em.find(Category.class,cid);
+    
+//         a.setAddressId(addressId);
+       p.setCid(c);
+       p.setPname(pname);
+        p.setBrandname(brandname);
+         
+       em.merge(p);
+    }
+
+    @Override
+    public void removeProduct(Integer pid, Integer cid) {
+  Category c = em.find(Category.class, cid);
+    
+     Product product = em.find(Product.class,pid);
+    Collection<Product> products = c.getProductCollection();
+    if(products.contains(product))
+    {
+        products.remove(product);
+        c.setProductCollection(products);
+        em.remove(product);
+        em.merge(c);
+    }
+    }
+
+    @Override
+    public Collection<Category> getAllCategory() {
+        return em.createNamedQuery("Category.findAll").getResultList();
+    }
+---------------------------------------------------------------------------------------
+REST
+----------------------------
+@EJB beanLocal pbl;
+    @Context
+    private UriInfo context;
+
+    public GenericResource() {
+    }
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    @Path("getAllproduct")
+   public Collection<Product> getAllproduct() {
+        return pbl.getAllproduct();
+    }
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    @Path("getAllCategory")
+    public Collection<Category> getAllCategory(){
+        return pbl.getAllCategory();
+    }
+    
+   @Path("addproduct/{cid}/{pname}/{brandname}")
+    @POST
+    public void addProduct(@PathParam("cid") Integer cid,@PathParam("pname") String pname,@PathParam("brandname") String brandname) {
+       pbl.addProduct(cid, pname, brandname);
+    }
+    @Path("updateproduct/{pid}/{cid}/{pname}/{brandname}")
+    @POST
+    public void updateProduct(@PathParam("pid")Integer pid,@PathParam("cid") Integer cid,@PathParam("pname") String pname,@PathParam("brandname") String brandname) {
+        pbl.updateProduct(pid, cid, pname, brandname);
+    }
+
+   @Path("removeproduct/{pid}/{cid}")
+    @DELETE
+    public void removeProduct(@PathParam("pid")Integer pid,@PathParam("cid") Integer cid) {
+        pbl.removeProduct(pid, cid);
+    }
+-----------------------------------------------------------------------------
+managebean
+------------------------------------
+ restClient restc=new restClient();
+    private Response res;
+    private GenericType<Collection<Product>> productgeneric;
+    private GenericType<Collection<Category>> categorygeneric;
+       Product product = new Product();
+   private String pid,name,cid,brandname;
+    Collection<Category> categorylist;
+
+    public restClient getRestc() {
+        return restc;
+    }
+
+    public void setRestc(restClient restc) {
+        this.restc = restc;
+    }
+
+    public Response getRes() {
+        return res;
+    }
+
+    public void setRes(Response res) {
+        this.res = res;
+    }
+
+    public GenericType<Collection<Product>> getProductgeneric() {
+        return productgeneric;
+    }
+
+    public void setProductgeneric(GenericType<Collection<Product>> productgeneric) {
+        this.productgeneric = productgeneric;
+    }
+
+    public GenericType<Collection<Category>> getCategorygeneric() {
+        return categorygeneric;
+    }
+
+    public void setCategorygeneric(GenericType<Collection<Category>> categorygeneric) {
+        this.categorygeneric = categorygeneric;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public String getPid() {
+        return pid;
+    }
+
+    public void setPid(String pid) {
+        this.pid = pid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCid() {
+        return cid;
+    }
+
+    public void setCid(String cid) {
+        this.cid = cid;
+    }
+
+    public String getBrandname() {
+        return brandname;
+    }
+
+    public void setBrandname(String brandname) {
+        this.brandname = brandname;
+    }
+
+    public Collection<Category> getCategorylist() {
+        return categorylist;
+    }
+
+    public void setCategorylist(Collection<Category> categorylist) {
+        this.categorylist = categorylist;
+    }
+
+    
+
+    public JSFManagedBean() {
+    }
+    
+    @PostConstruct
+    public void init(){
+       categorygeneric = new GenericType<Collection<Category>>(){};
+       res = restc.getAllCategory(Response.class);
+       this.categorylist = res.readEntity(categorygeneric);
+       
+//       brandgeneric = new GenericType<Collection<Brandtb>>(){};
+//       res = productclient.getAllBrand(Response.class);
+//       this.brandlist = res.readEntity(brandgeneric);
+    }
+    
+    public Collection<Product> findAll(){
+            productgeneric = new GenericType<Collection<Product>>(){};
+            res = restc.getAllproduct(Response.class);
+            Collection<Product> product = res.readEntity(productgeneric);
+            return product;
+    }
+    
+    public String add(){
+        restc.addProduct(cid, name, brandname);
+        this.product = new Product();
+        return "display";
+    }
+    
+    public void delete(Product p){
+        this.pid = p.getPid().toString();
+        Category c = p.getCid();
+        this.cid = c.getCid().toString();
+        restc.removeProduct(pid, cid);
+        
+    }
+    
+    public String edit(Product p){
+        this.pid = p.getPid().toString();
+        Category c = p.getCid();
+        this.cid = c.getCid().toString();
+       
+        this.name = p.getPname();
+        this.brandname = p.getBrandname();
+        this.product=new Product();
+        return "edit";
+    }
+    
+    public String edit(){
+        restc.updateProduct(pid, cid, name, brandname);
+//        this.product = new Product();
+        return "display";
+    }
+---------------------------------------------------------------------
+JSF--------------------------
+display
+-------------------------------------
+<h:form>
+<!--                <h:selectManyCheckbox id="deptSel" value="#{jSFManagedBean.cid}">
+                    <f:ajax event="click" execute="prodsearch" render="tb1" />
+                    <f:selectItems value="#{jSFManagedBean.categorylist}" var="d" itemValue="#{d.cid}" itemLabel="#{d.cname}">
+                        
+                    </f:selectItems>
+                </h:selectManyCheckbox>-->
+                <h1><h:outputText value="List"/></h1>
+                    <h:dataTable value="#{jSFManagedBean.findAll()}" var="item">
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Pid"/>
+                        </f:facet>
+                        <h:outputText value="#{item.pid}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Pname"/>
+                        </f:facet>
+                        <h:outputText value="#{item.pname}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Brandname"/>
+                        </f:facet>
+                        <h:outputText value="#{item.brandname}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Cid"/>
+                        </f:facet>
+                        <h:outputText value="#{item.cid.cname}"/>
+                    </h:column>
+                    <h:column>
+                <f:facet name="header">Edit</f:facet>
+                <h:commandLink value="Edit" action="#{jSFManagedBean.edit(item)}"></h:commandLink>
+            </h:column>
+            <h:column>
+                <f:facet name="header">Delete</f:facet>
+                <h:commandLink value="Delete" action="#{jSFManagedBean.delete(item)}" onclick="return confirm('Are you sure?')"></h:commandLink>
+            </h:column>
+                </h:dataTable>
+            </h:form>
+-------------------------------------------------------------
+insert
+---------------------------
+ <h:form>
+            name:<h:inputText value="#{jSFManagedBean.name}"></h:inputText><br/>
+            brand:<h:inputText value="#{jSFManagedBean.brandname}"></h:inputText><br/>
+            
+            <h:selectOneMenu value="#{jSFManagedBean.cid}">
+                <f:selectItems value="#{jSFManagedBean.categorylist}" var="c" itemValue="#{c.cid}" itemLabel="#{c.cname}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{jSFManagedBean.add()}"></h:commandButton>
+        </h:form>
+-----------------------------------
+edit
+-------------------------------------------
+<h:form>
+            name:<h:inputText value="#{jSFManagedBean.name}"></h:inputText><br/>
+            brand:<h:inputText value="#{jSFManagedBean.brandname}"></h:inputText><br/>
+            
+            <h:selectOneMenu value="#{jSFManagedBean.cid}">
+                <f:selectItems value="#{jSFManagedBean.categorylist}" var="c" itemValue="#{c.cid}" itemLabel="#{c.cname}">
+                </f:selectItems>
+            </h:selectOneMenu>
+            <h:commandButton value="save" action="#{jSFManagedBean.edit()}"></h:commandButton>
+        </h:form>
+---------------------------------------------------------------------
+index
+----------------------------------------------
+<h:form>
+                <h1><h:outputText value="List"/></h1>
+                <h:dataTable value="#{jSFManagedBean.findAll()}" var="item">
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Pid"/>
+                        </f:facet>
+                        <h:outputText value="#{item.pid}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Pname"/>
+                        </f:facet>
+                        <h:outputText value="#{item.pname}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Brandname"/>
+                        </f:facet>
+                        <h:outputText value="#{item.brandname}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">
+                            <h:outputText value="Cid"/>
+                        </f:facet>
+                        <h:outputText value="#{item.cid}"/>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
+============================================================================================
 ===================================2 TABLE CRUD WITH JSF============================================
 
 prepare database ,coonection bridge,insert driver,persistant unit,entity,ejbs,managed Bean (right click+new+other+jsf CDI Bean,inside that scope application )(addinser code+callenterprise bean+select your ejvlocal+okay)
 change persistant unit name start the server
-
+for rest(right click on project->restful web services from patterns) next,next,okay
+then put all bean method in that remove inside logic and call all localbean methods also add uperlines like get post etc
+and then create restfull java client
 =============================================================================================
 persistent.xml
 -----------------------------------------------------------------
@@ -2075,5 +3191,4 @@ steps----------------------------
 toolbar + window + IDE tools + Pallete
 ----------------
 drag and drop
-
 
