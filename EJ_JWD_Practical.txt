@@ -18,7 +18,7 @@
 empfinalmix,jsf_kruti = ejbempdb
 jsf_jpa_rest_ejb = externaldb
 jsf_multipletablecrud = clgsir
-=====================================COMPLETE JSF CRUD WITH SEARCH,rest,jpa,ejb==============================
+=====================================COMPLETE JSF CRUD WITH SEARCH,rest,jpa,ejb=======================================================
 1.new-other-context and dependency inject...-beans.xml(CDI confi.. file) and discovery="annoted" ni jagya e "all"
        bean-discovery-mode="all">
 2.
@@ -2139,7 +2139,56 @@ pbl.updateCustomer(20, "firstName"," lastName");
 
 ----------------------------------------------------2TABLE,3 table UPDATE,Remove-----------------------------------
 ejb(Bean.java)
-
+==========================================3 table ADD===================================
+@Override
+    public void addCancelBooking(Integer UserID, Integer PackageID, Integer PaymentID, String ReasonForCancel, DateTime Date) {
+     Packages p = em.find(Packages.class, PackageID);
+     Payment paym=em.find(Payment.class,PaymentID);
+     User u=em.find(User.class,UserID);
+     
+     if(p != null && u != null && paym != null)
+     {
+        Collection<CancelBooking> cb = p.getCancelBookingCollection();
+        Collection<CancelBooking> cb1 = u.getCancelBookingCollection();
+        Collection<CancelBooking> cb2 = paym.getCancelBookingCollection();
+     CancelBooking cbook = new CancelBooking();
+     cbook.setPackageID(p);
+     cbook.setUserID(u);
+     cbook.setPaymentID(paym);
+     cbook.setReasonForCancel(ReasonForCancel);
+     cbook.setDate(new Date());
+    
+     cb.add(cbook);
+     cb1.add(cbook);
+     cb2.add(cbook);
+        em.persist(cbook);
+        em.merge(cb);
+        em.merge(cb1);   
+     em.merge(cb2);
+     }
+    }
+---------------------------------------update==================================
+@Override
+    public void updatePayment(Integer PaymentID, Integer UserID, Integer PackageID, Integer AccountNo, Integer BankIFSC, Integer Amount, DateTime Date) {
+       Packages p= em.find(Packages.class,PackageID);
+         Payment pm=em.find(Payment.class,PaymentID);
+         User u = em.find(User.class, UserID);
+    
+         pm.setUserID(u);
+         pm.setPackageID(p);
+         pm.setAccountNo(AccountNo);
+         pm.setAmount(Amount);
+//         pm.setBankIFSC(bankIFSC);
+         pm.setDate(new Date());
+         
+       em.merge(pm);  
+    }
+--------------------------------delete-----------------------------------
+@Override
+    public void removeBookPackage(Integer PackageBookingID) {
+        PackageBooking rbp = (PackageBooking) em.find(PackageBooking.class, PackageBookingID);
+       em.remove(rbp);
+    } 
 
 //    =======================================Places=======================================
     @Override
@@ -3191,4 +3240,3 @@ steps----------------------------
 toolbar + window + IDE tools + Pallete
 ----------------
 drag and drop
-
